@@ -10,4 +10,22 @@ The data I used for this project is from the USDA atlas of rural and small-town 
 Links for the original data and my preprocessed data are below:
 
 Original data: https://www.ers.usda.gov/data-products/atlas-of-rural-and-small-town-america
-Preprocessed data: 
+Preprocessed data: https://github.com/NSuer/Visual_Interfaces_Project_1/blob/main/MyData.xlsx
+
+## Visualization Components
+TODO
+
+## What the application allows you to discover
+TODO
+
+## Process
+TODO
+
+## Challenges and Future Work
+
+## AI and Collaboration
+- I use github copilot when I program. This is used more as an autocomplete tool than anything.
+- TODO
+
+## Demo
+
