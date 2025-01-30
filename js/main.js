@@ -1,131 +1,167 @@
 console.log("Hello world");
 
-d3.csv('data/disasters.csv')
-  .then(data => {
-  	console.log('Data loading complete. Work with dataset. HI THERE');
-    console.log(data);
+let histogramData = {};
+let scatterData = {};
+let chloropleth1Data = {};
+let chloropleth2Data = {};
 
-    //process the data - this is a forEach function.  You could also do a regular for loop.... 
-    data.forEach(d => { //ARROW function - for each object in the array, pass it as a parameter to this function
-      	d.cost = +d.cost; // convert string 'cost' to number
-      	d.daysFromYrStart = computeDays(d.start); //note- I just created this field in each object in the array on the fly
+d3.csv('data/MyData.csv')
+	.then(data => {
+		console.log('Data loading complete. Work with dataset. HI THERE');
+		console.log(data);
 
-				let tokens = d.start.split("-");
-  			d.year = +tokens[0];
+		//process the data 
+		// For each column a max should be calculated
+		// using the min and max, each value should be mapped to a value between 0 and 1 in a new column
 
-  	});
+		// get the columns
+		let columns = data.columns;
+		console.log('Columns in the dataset:');
+		console.log(columns);
 
-    //lets compute costs per year for the line chart
-  	let minYear = d3.min( data, d => d.year);
-  	let maxYear = d3.max( data, d => d.year );
-
-  	let costsPerYear = []; //this will be our data for the line chart
-  	for(let i = minYear; i < maxYear; i++){
-
-  		let justThisYear = data.filter( d => d.year == i ); //only include the selected year
-  		let cost = d3.sum(justThisYear, d => d.cost); //sum over the filtered array, for the cost field
-
-  		costsPerYear.push( {"year": i, "cost":cost});
-
-  	}
+		//cut out the first row and save it as descriptions for the columns
+		let descriptions = data[0];
+		console.log('Descriptions of columns:');
+		console.log(descriptions);
+		
+		data = data.slice(1);
+		data.columns = columns;
 
 
-  // 	// Create an instance (for example in main.js)
-		let timelineCircles = new TimelineCircles({
-			'parentElement': '#timeline',
+		// get the max of each column
+		let maxValues = {};
+		columns.forEach(column => {
+			maxValues[column] = d3.max(data.slice(1), d => d[column]);
+		});
+
+		console.log('Max values of each column:');
+		console.log(maxValues);
+
+		// add a new column for each column in the dataset
+		columns.forEach(column => {
+			let newColumn = column + '_normalized';
+			data.columns.push(newColumn);
+			data.forEach(d => {
+				d[newColumn] = +d[column] / +maxValues[column];
+			});
+		});
+
+		console.log('Data after normalization:');
+		console.log(data);
+		console.log('normalized columns:');
+		console.log(data.columns);
+
+		histogramData = data;
+		scatterData = data;
+		chloropleth1Data = data;
+		chloropleth2Data = data;
+
+		// Histogram
+		let histogram = new Histogram({
+			'parentElement': '#histogram',
 			'containerHeight': 1100,
 			'containerWidth': 1000
-		}, data);
+		}, histogramData);
 
-
-		let lineChart = new LineChart({
-			'parentElement': '#line',
-			'containerHeight': 100,
+		// Scatterplot
+		let scatterplot = new Scatterplot({
+			'parentElement': '#scatterplot',
+			'containerHeight': 1100,
 			'containerWidth': 1000
-			}, costsPerYear); 
+		}, scatterData);
 
-})
-.catch(error => {
-    console.error('Error loading the data');
-});
+		// Chloropleth Map
+		let chloropleth1 = new Chloropleth({
+			'parentElement': '#chloropleth1',
+			'containerHeight': 1100,
+			'containerWidth': 1000
+		}, chloropleth1Data);
+
+		let chloropleth2 = new Chloropleth({
+			'parentElement': '#chloropleth2',
+			'containerHeight': 1100,
+			'containerWidth': 1000
+		}, chloropleth2Data);
+
+		// Create dropdowns for each graph
+		const columnsDropdown = columns.filter(column => column !== 'FIPS' && column !== 'State' && column !== 'County');
+
+		// Create dropdown for Histogram
+		d3.select('#histogram-dropdown')
+			.selectAll('option')
+			.data(columnsDropdown)
+			.enter()
+			.append('option')
+			.text(d => d)
+			.attr('value', d => d);
+
+		// Create dropdown for Scatterplot X-axis
+		d3.select('#scatterplot-x-dropdown')
+			.selectAll('option')
+			.data(columnsDropdown)
+			.enter()
+			.append('option')
+			.text(d => d)
+			.attr('value', d => d);
+
+		// Create dropdown for Scatterplot Y-axis
+		d3.select('#scatterplot-y-dropdown')
+			.selectAll('option')
+			.data(columnsDropdown)
+			.enter()
+			.append('option')
+			.text(d => d)
+			.attr('value', d => d);
+
+		// Create dropdown for Chloropleth Map
+		d3.select('#chloropleth-dropdown1')
+			.selectAll('option')
+			.data(columnsDropdown)
+			.enter()
+			.append('option')
+			.text(d => d)
+			.attr('value', d => d);
+
+		d3.select('#chloropleth-dropdown2')
+			.selectAll('option')
+			.data(columnsDropdown)
+			.enter()
+			.append('option')
+			.text(d => d)
+			.attr('value', d => d);
+
+		// Event listeners for dropdowns to update graphs
+		d3.select('#histogram-dropdown').on('change', function() {
+			let selectedColumn = d3.select(this).property('value');
+			histogram.updateData(data, selectedColumn);
+		});
+
+		d3.select('#scatterplot-x-dropdown').on('change', function() {
+			let selectedXColumn = d3.select(this).property('value');
+			let selectedYColumn = d3.select('#scatterplot-y-dropdown').property('value');
+			scatterplot.updateData(data, selectedXColumn, selectedYColumn);
+		});
+
+		d3.select('#scatterplot-y-dropdown').on('change', function() {
+			let selectedXColumn = d3.select('#scatterplot-x-dropdown').property('value');
+			let selectedYColumn = d3.select(this).property('value');
+			scatterplot.updateData(data, selectedXColumn, selectedYColumn);
+		});
+
+		d3.select('#chloropleth-dropdown1').on('change', function() {
+			let selectedColumn = d3.select(this).property('value');
+			chloropleth1.updateData(data, selectedColumn);
+		});
+
+		d3.select('#chloropleth-dropdown2').on('change', function() {
+			let selectedColumn = d3.select(this).property('value');
+			chloropleth2.updateData(data, selectedColumn);
+		});
+
+	})
+	.catch(error => {
+		console.log('Error loading the data');
+		console.log(error);
+	});
 
 
-/// OLD VERSION.... 
-// function drawChart(data){
-
-// 	console.log("Let's draw a chart!!");
-	
-
-// 	// Margin object with properties for the four directions
-// 	const margin = {top: 40, right: 50, bottom: 10, left: 50};
-
-// 	// Width and height as the inner dimensions of the chart area
-// 	const width = 1000 - margin.left - margin.right;
-// 	const height = 1100 - margin.top - margin.bottom;
-
-// 	// Define 'svg' as a child-element (g) from the drawing area and include spaces
-// 	// Add <svg> element (drawing space)
-// 	const svg = d3.select('body').append('svg')
-// 	    .attr('width', width + margin.left + margin.right)
-// 	    .attr('height', height + margin.top + margin.bottom)
-// 	    .append('g')
-// 	    .attr('transform', `translate(${margin.left}, ${margin.top})`);
-
-// 	// Initialize linear and ordinal scales (input domain and output range)
-// 	const xScale = d3.scaleLinear()
-// 		.domain([0, 365])
-// 		.range([0, width]);
-
-// 	console.log(d3.min(data, d => d.year) );
-
-// 	const yScale = d3.scaleLinear()
-// 		.domain([d3.max(data, d => d.year), d3.min( data, d => d.year)]) 
-// 		.range([0, height]);
-
-// 	const rScale = d3.scaleLinear()
-// 		.domain(d3.extent(data, d=> d.cost))
-// 		.range([5, 100]);
-
-// 	// Construct a new ordinal scale with a range of ten categorical colours
-// 	let colorPalette = d3.scaleOrdinal(d3.schemeTableau10)
-// 	colorPalette.domain( "tropical-cyclone", "drought-wildfire", "severe-storm", "flooding" );
-
-// 		// Initialize axes
-// 		const xAxis = d3.axisTop(xScale);
-// 		const yAxis = d3.axisLeft(yScale);
-
-// 		// Draw the axis
-// 		const xAxisGroup = svg.append('g')
-// 		  .attr('class', 'axis x-axis') 
-// 		  .call(xAxis);
-
-// 		const yAxisGroup = svg.append('g')
-// 		  .attr('class', 'axis y-axis')
-// 		  .call(yAxis);
-
-// 		//Add circles for each event in the data
-// 	svg.selectAll('circle')
-// 	    .data(data)
-// 	    .enter()
-// 	  .append('circle')
-// 	  	.attr('fill', (d) => colorPalette(d.category) )
-// 	    .attr('opacity', .8)
-// 	    .attr('stroke', "gray")
-// 	    .attr('stroke-width', 2)
-// 	    .attr('r', (d) => rScale(d.cost) ) 
-// 	    .attr('cy', (d) => yScale(d.year) ) 
-// 	    .attr('cx',(d) =>  xScale(d.daysFromYrStart) );
-
-
-// }
-
-function computeDays(disasterDate){
-  	let tokens = disasterDate.split("-");
-
-  	let year = +tokens[0];
-  	let month = +tokens[1];
-  	let day = +tokens[2];
-
-    return (Date.UTC(year, month-1, day) - Date.UTC(year, 0, 0)) / 24 / 60 / 60 / 1000 ;
-
-  }
