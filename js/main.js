@@ -14,10 +14,21 @@ d3.csv('data/MyData.csv')
 		// For each column a max should be calculated
 		// using the min and max, each value should be mapped to a value between 0 and 1 in a new column
 
-		// get the columns
-		let columns = data.columns;
+		// get the columns that include percentages or rates, given by 'pct' or 'rate' either uppercase or lowercase
+		let columns = data.columns.filter(column => column.toLowerCase().includes('pct') || column.toLowerCase().includes('rate') || column.toLowerCase().includes('deep'));
 		console.log('Columns in the dataset:');
 		console.log(columns);
+
+		// remove the columns that are not percentages except for the FIPS, State, and County columns
+		data = data.map(row => {
+			let newRow = {};
+			Object.keys(row).forEach(key => {
+				if (key === 'FIPS' || key === 'State' || key === 'County' || columns.includes(key)) {
+					newRow[key] = row[key];
+				}
+			});
+			return newRow;
+		});
 
 		//cut out the first row and save it as descriptions for the columns
 		let descriptions = data[0];
@@ -26,7 +37,6 @@ d3.csv('data/MyData.csv')
 
 		data = data.slice(1);
 		data.columns = columns;
-
 
 		histogramData = data;
 		scatterData = data;
@@ -39,9 +49,9 @@ d3.csv('data/MyData.csv')
 		let chloropleth1Container = d3.select('#chloropleth1').node().getBoundingClientRect();
 		let chloropleth2Container = d3.select('#chloropleth2').node().getBoundingClientRect();
 
-		let defaultHistogramColumn = 'Median_HH_Inc_ACS';
-		let defaultScatterColumns = ['Median_HH_Inc_ACS', 'Vets18OPct'];
-		let defaultChloroplethColumns = ['Median_HH_Inc_ACS', 'Vets18OPct'];
+		let defaultHistogramColumn = 'Deep_Pov_All';
+		let defaultScatterColumns = ['Deep_Pov_All', 'Vets18OPct'];
+		let defaultChloroplethColumns = ['Deep_Pov_All', 'Vets18OPct'];
 
 		let histogram = new Histogram({
 			'parentElement': '#histogram',

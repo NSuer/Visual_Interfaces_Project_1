@@ -67,7 +67,7 @@ class Chloropleth {
             const dataEntry = vis.processedData.find(d => d.Fips === fips);
 
             if (dataEntry) {
-                feature.properties.value = dataEntry.normalized_data; // Add the data value to the GeoJSON feature
+                feature.properties.value = dataEntry.corrected_data; // Add the data value to the GeoJSON feature
                 feature.properties.data = dataEntry.data;
                 feature.properties.county = dataEntry.County;
                 feature.properties.state = dataEntry.State;
@@ -85,8 +85,9 @@ class Chloropleth {
 
         vis.infoText = vis.infoArea.append('text')
             .attr('class', 'info-text')
-            .attr('x', 0)
-            .attr('y', 0)
+            .attr('x', vis.width / 2)
+            .attr('y', -this.config.containerHeight + 10 )
+            .attr('text-anchor', 'middle')
             .style('font-size', '12px')
             .style('fill', '#000');
 
@@ -105,7 +106,7 @@ class Chloropleth {
                 .duration(100)
                 .style('fill', 'orange');
 
-            vis.infoText.text(`FIPS: ${d.properties.GEOID} | State: ${d.properties.state} | County: ${d.properties.county} | ${vis.selectedColumn}: ${d.properties.data}`);
+            vis.infoText.text(`FIPS: ${d.properties.GEOID} | State: ${d.properties.state} | County: ${d.properties.county} | Percentage: ${d.properties.data}%`);
             })
             .on('mouseout', function (event, d) {
             d3.select(this)
@@ -123,15 +124,9 @@ class Chloropleth {
     updateData(data, selectedColumn) {
         this.selectedColumn = selectedColumn;
 
-        // I need to normalize the data to the range of the color scale
-        // This will be done by finding the mac and dividing each value by the max to get a value between 0 and 1
-        let max = d3.max(data, d => d[this.selectedColumn]);
-
-
-
-
+        // I need to fix the data so that it is imbetween 0 and 1 not 0 and 100
         this.processedData = data.map(d => ({
-            normalized_data: d[this.selectedColumn] / max,
+            corrected_data: d[this.selectedColumn] /10,
             data: d[this.selectedColumn],
             Fips: d['FIPS'],
             State: d['State'],

@@ -35,20 +35,20 @@ class Histogram {
 
         // Create bins
         let bins = d3.histogram()
-            .domain(d3.extent(vis.data))
-            .thresholds(d3.thresholdScott(vis.data, d3.min(vis.data), d3.max(vis.data)))
+            .domain([0, 100])
+            .thresholds(d3.range(0, 100, 1))
             (vis.data)
             .map(bin => {
-                bin.x0 = bin.x0 !== undefined ? bin.x0 : bin[0];
-                bin.x1 = bin.x1 !== undefined ? bin.x1 : bin[bin.length - 1];
-                return bin;
+            bin.x0 = bin.x0 !== undefined ? bin.x0 : bin[0];
+            bin.x1 = bin.x1 !== undefined ? bin.x1 : bin[bin.length - 1];
+            return bin;
             });
 
         console.log('Bins:', bins);
 
         // Create scales
         let x = d3.scaleLinear()
-            .domain([d3.min(vis.data), d3.max(vis.data)])
+            .domain([0, 100])
             .range([0, vis.width]);
 
         let y = d3.scaleLinear()
@@ -100,11 +100,9 @@ class Histogram {
             tooltip.transition()
                 .duration(200)
                 .style('opacity', .9);
-            tooltip.html(`Count: ${d.length}<br>${vis.selectedColumn} range: [${d.x0.toFixed(2)}, ${d.x1.toFixed(2)}]`)
+            tooltip.html(`Count: ${d.length}<br> Percentage range: [${d.x0}%, ${d.x1}%]`)
                 .style('left', (event.pageX + 5) + 'px')
                 .style('top', (event.pageY - 35) + 'px')
-                .style('width', '150px')  // Increase width
-                .style('height', '70px'); // Increase height
             })
             .on('mouseout', function(d) {
             d3.select(this).attr('fill', 'steelblue');

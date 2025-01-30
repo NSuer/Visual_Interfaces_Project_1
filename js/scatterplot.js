@@ -39,11 +39,11 @@ class Scatterplot {
 
         // Create scales
         let x = d3.scaleLinear()
-            .domain([d3.min(vis.processedData, d => d.Xdata), d3.max(vis.processedData, d => d.Xdata)])
+            .domain([0, 100])
             .range([0, vis.width]);
 
         let y = d3.scaleLinear()
-            .domain([d3.min(vis.processedData, d => d.Ydata), d3.max(vis.processedData, d => d.Ydata)])
+            .domain([0, 100])
             .range([vis.height, 0]);
 
         // Create axes
@@ -103,7 +103,7 @@ class Scatterplot {
                 vis.tooltip.transition()
                     .duration(100)
                     .style('opacity', 1);
-                vis.tooltip.html(`FIPS: ${d.Fips}<br>State: ${d.State}<br>County: ${d.County}<br>${vis.selectedXColumn}: ${d.Xdata}<br>${vis.selectedYColumn}: ${d.Ydata}`)
+                vis.tooltip.html(`FIPS: ${d.Fips}<br>State: ${d.State}<br>County: ${d.County}<br>${vis.selectedXColumn}: ${d.Xdata}%<br>${vis.selectedYColumn}: ${d.Ydata}%`)
                     .style('left', (event.pageX + 10) + 'px')
                     .style('top', (event.pageY - 28) + 'px');
             })
