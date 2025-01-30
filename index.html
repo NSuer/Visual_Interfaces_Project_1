@@ -2,24 +2,45 @@
 <html>
 
 <head>
-    <title>D3 Project Starter Template</title>
+    <title>Exploring economy and how they impact military service and veterans</title>
     <meta charset="UTF-8">
     <link rel="icon" href="data:;base64,iVBORwOKGO=" />
     <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
-    <!-- Add HTML content, SVG drawing area, ... -->
-    <svg id="histogram"></svg>
-    <select id="histogram-dropdown"></select>
-    <svg id="scatterplot"></svg>
-    <select id="scatterplot-x-dropdown"></select>
-    <select id="scatterplot-y-dropdown"></select>
-    <svg id="chloropleth1"></svg>
-    <select id="chloropleth-dropdown1"></select>
-    <svg id="chloropleth2"></svg>
-    <select id="chloropleth-dropdown2"></select>
+    <!-- Title area -->
+    <header>
+        <h1>Exploring economy and how they impact military service and veterans</h1>
+        <h2>By: Nathan Suer</h2>
+        <div class="paragraphText">Original data: <a href="https://www.ers.usda.gov/data-products/atlas-of-rural-and-small-town-america">https://www.ers.usda.gov/data-products/atlas-of-rural-and-small-town-america</a></div>
+        <div class="paragraphText">Preprocessed data: <a href="https://github.com/NSuer/Visual_Interfaces_Project_1/blob/main/MyData.xlsx">https://github.com/NSuer/Visual_Interfaces_Project_1/blob/main/MyData.xlsx</a></div>
+    </header>
 
+    <!-- Main content area -->
+    <main>
+        <div class="chart-container">
+            <div class="chart">
+                <svg id="histogram"></svg>
+                <select id="histogram-dropdown"></select>
+            </div>
+            <div class="chart">
+                <svg id="scatterplot"></svg>
+                <select id="scatterplot-y-dropdown"></select>
+                <select id="scatterplot-x-dropdown"></select>
+            </div>
+        </div>
+        <div class="chart-container">
+            <div class="chart">
+                <svg id="chloropleth1"></svg>
+                <select id="chloropleth-dropdown1"></select>
+            </div>
+            <div class="chart">
+                <svg id="chloropleth2"></svg>
+                <select id="chloropleth-dropdown2"></select>
+            </div>
+        </div>
+    </main>
 
     <!-- D3 bundle -->
     <script src="js/d3.v6.min.js"></script>
@@ -30,7 +51,56 @@
     <script src="js/scatterplot.js"></script>
     <script src="js/chloropleth.js"></script>
 
-
 </body>
 
 </html>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+    }
+
+    header {
+        text-align: center;
+        padding: 20px;
+        background-color: #f4f4f4;
+    }
+
+    .paragraphText {
+        margin: 5px 0;
+    }
+
+    main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        padding: 20px;
+    }
+
+    .chart-container {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 20px;
+    }
+
+    .chart {
+        flex: 1;
+        margin: 0 10px;
+        text-align: center;
+    }
+
+    svg {
+        width: 100%;
+        height: 300px;
+    }
+
+    select {
+        margin-top: 10px;
+    }
+</style>
