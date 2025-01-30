@@ -25,7 +25,7 @@ TODO
 
 ## AI and Collaboration
 - I use github copilot when I program. This is used more as an autocomplete tool than anything.
-- TODO
+- I used google to learn how to do the cloropleth map. I lost the link though. The code is mostly my own though.
 
 ## Demo
 

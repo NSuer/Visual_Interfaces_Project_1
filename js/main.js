@@ -23,33 +23,10 @@ d3.csv('data/MyData.csv')
 		let descriptions = data[0];
 		console.log('Descriptions of columns:');
 		console.log(descriptions);
-		
+
 		data = data.slice(1);
 		data.columns = columns;
 
-
-		// get the max of each column
-		let maxValues = {};
-		columns.forEach(column => {
-			maxValues[column] = d3.max(data.slice(1), d => d[column]);
-		});
-
-		console.log('Max values of each column:');
-		console.log(maxValues);
-
-		// add a new column for each column in the dataset
-		columns.forEach(column => {
-			let newColumn = column + '_normalized';
-			data.columns.push(newColumn);
-			data.forEach(d => {
-				d[newColumn] = +d[column] / +maxValues[column];
-			});
-		});
-
-		console.log('Data after normalization:');
-		console.log(data);
-		console.log('normalized columns:');
-		console.log(data.columns);
 
 		histogramData = data;
 		scatterData = data;
@@ -63,8 +40,8 @@ d3.csv('data/MyData.csv')
 		let chloropleth2Container = d3.select('#chloropleth2').node().getBoundingClientRect();
 
 		let defaultHistogramColumn = 'Median_HH_Inc_ACS';
-		let defaultScatterColumns = ['Median_HH_Inc_ACS', 'POVALL'];
-		let defaultChloroplethColumns = ['Median_HH_Inc_ACS', 'Vets180Pct'];
+		let defaultScatterColumns = ['Median_HH_Inc_ACS', 'Vets18OPct'];
+		let defaultChloroplethColumns = ['Median_HH_Inc_ACS', 'Vets18OPct'];
 
 		let histogram = new Histogram({
 			'parentElement': '#histogram',
@@ -79,18 +56,18 @@ d3.csv('data/MyData.csv')
 			'containerWidth': scatterplotContainer.width,
 		}, scatterData, defaultScatterColumns);
 
-		// Chloropleth Map
 		let chloropleth1 = new Chloropleth({
 			'parentElement': '#chloropleth1',
 			'containerHeight': chloropleth1Container.height,
 			'containerWidth': chloropleth1Container.width
-		}, chloropleth1Data, defaultChloroplethColumns[1]);
+		}, chloropleth1Data, defaultChloroplethColumns[0]);
+		// Chloropleth Map
 
 		let chloropleth2 = new Chloropleth({
 			'parentElement': '#chloropleth2',
 			'containerHeight': chloropleth2Container.height,
 			'containerWidth': chloropleth2Container.width
-		}, chloropleth2Data, defaultChloroplethColumns[2]);
+		}, chloropleth2Data, defaultChloroplethColumns[1]);
 
 		// Create dropdowns for each graph
 		const columnsDropdown = columns.filter(column => column !== 'FIPS' && column !== 'State' && column !== 'County');
@@ -105,6 +82,7 @@ d3.csv('data/MyData.csv')
 			.attr('value', d => d);
 
 		d3.select('#histogram-dropdown').property('value', defaultHistogramColumn);
+		d3.select('#histogram-description').text(descriptions[defaultHistogramColumn]);
 
 		// Create dropdown for Scatterplot X-axis
 		d3.select('#scatterplot-x-dropdown')
@@ -116,6 +94,7 @@ d3.csv('data/MyData.csv')
 			.attr('value', d => d);
 
 		d3.select('#scatterplot-x-dropdown').property('value', defaultScatterColumns[0]);
+		d3.select('#scatterplot-x-description').text(descriptions[defaultScatterColumns[0]]);
 
 		// Create dropdown for Scatterplot Y-axis
 		d3.select('#scatterplot-y-dropdown')
@@ -127,6 +106,7 @@ d3.csv('data/MyData.csv')
 			.attr('value', d => d);
 
 		d3.select('#scatterplot-y-dropdown').property('value', defaultScatterColumns[1]);
+		d3.select('#scatterplot-y-description').text(descriptions[defaultScatterColumns[1]]);
 
 		// Create dropdown for Chloropleth Map
 		d3.select('#chloropleth-dropdown1')
@@ -138,6 +118,7 @@ d3.csv('data/MyData.csv')
 			.attr('value', d => d);
 
 		d3.select('#chloropleth-dropdown1').property('value', defaultChloroplethColumns[0]);
+		d3.select('#chloropleth-description1').text(descriptions[defaultChloroplethColumns[0]]);
 
 		d3.select('#chloropleth-dropdown2')
 			.selectAll('option')
@@ -148,33 +129,39 @@ d3.csv('data/MyData.csv')
 			.attr('value', d => d);
 
 		d3.select('#chloropleth-dropdown2').property('value', defaultChloroplethColumns[1]);
+		d3.select('#chloropleth-description2').text(descriptions[defaultChloroplethColumns[1]]);
 
-		// Event listeners for dropdowns to update graphs
-		d3.select('#histogram-dropdown').on('change', function() {
+		// Event listeners for dropdowns to update graphs and descriptions
+		d3.select('#histogram-dropdown').on('change', function () {
 			let selectedColumn = d3.select(this).property('value');
 			histogram.updateData(data, selectedColumn);
+			d3.select('#histogram-description').text(descriptions[selectedColumn]);
 		});
 
-		d3.select('#scatterplot-x-dropdown').on('change', function() {
+		d3.select('#scatterplot-x-dropdown').on('change', function () {
 			let selectedXColumn = d3.select(this).property('value');
 			let selectedYColumn = d3.select('#scatterplot-y-dropdown').property('value');
 			scatterplot.updateData(data, selectedXColumn, selectedYColumn);
+			d3.select('#scatterplot-x-description').text(descriptions[selectedXColumn]);
 		});
 
-		d3.select('#scatterplot-y-dropdown').on('change', function() {
+		d3.select('#scatterplot-y-dropdown').on('change', function () {
 			let selectedXColumn = d3.select('#scatterplot-x-dropdown').property('value');
 			let selectedYColumn = d3.select(this).property('value');
 			scatterplot.updateData(data, selectedXColumn, selectedYColumn);
+			d3.select('#scatterplot-y-description').text(descriptions[selectedYColumn]);
 		});
 
-		d3.select('#chloropleth-dropdown1').on('change', function() {
+		d3.select('#chloropleth-dropdown1').on('change', function () {
 			let selectedColumn = d3.select(this).property('value');
 			chloropleth1.updateData(data, selectedColumn);
+			d3.select('#chloropleth-description1').text(descriptions[selectedColumn]);
 		});
 
-		d3.select('#chloropleth-dropdown2').on('change', function() {
+		d3.select('#chloropleth-dropdown2').on('change', function () {
 			let selectedColumn = d3.select(this).property('value');
 			chloropleth2.updateData(data, selectedColumn);
+			d3.select('#chloropleth-description2').text(descriptions[selectedColumn]);
 		});
 
 	})

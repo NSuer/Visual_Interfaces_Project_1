@@ -4,7 +4,7 @@ class Scatterplot {
             parentElement: _config.parentElement,
             containerWidth: _config.containerWidth || 500,
             containerHeight: _config.containerHeight || 140,
-            margin: { top: 10, bottom: 50, right: 10, left: 50 }
+            margin: { top: 50, bottom: 50, right: 50, left: 50 }
         }
 
         this.data = _data;
@@ -16,7 +16,7 @@ class Scatterplot {
         console.log('Scatterplot default column:', this.defaultColumn[1]);
 
         // Call a class function
-        this.updateData(this.data, this.defaultColumn[0], this.defaultColumn[1]); 
+        this.updateData(this.data, this.defaultColumn[0], this.defaultColumn[1]);
     }
 
     initVis() {
@@ -103,7 +103,7 @@ class Scatterplot {
                 vis.tooltip.transition()
                     .duration(100)
                     .style('opacity', 1);
-                vis.tooltip.html(`FIPS: ${d.Fips}<br>State: ${d.State}<br>County: ${d.County}`)
+                vis.tooltip.html(`FIPS: ${d.Fips}<br>State: ${d.State}<br>County: ${d.County}<br>${vis.selectedXColumn}: ${d.Xdata}<br>${vis.selectedYColumn}: ${d.Ydata}`)
                     .style('left', (event.pageX + 10) + 'px')
                     .style('top', (event.pageY - 28) + 'px');
             })

@@ -4,7 +4,7 @@ class Histogram {
             parentElement: _config.parentElement,
             containerWidth: _config.containerWidth || 500,
             containerHeight: _config.containerHeight || 140,
-            margin: { top: 10, bottom: 50, right: 10, left: 50 }
+            margin: { top: 50, bottom: 50, right: 50, left: 50 }
         }
 
         this.data = _data;
@@ -33,7 +33,6 @@ class Histogram {
         vis.chart = vis.svg.append('g')
             .attr('transform', `translate(${vis.config.margin.left}, ${vis.config.margin.top})`);
 
-        // Create bins
         // Create bins
         let bins = d3.histogram()
             .domain(d3.extent(vis.data))
@@ -95,9 +94,41 @@ class Histogram {
             .attr('width', d => x(d.x1) - x(d.x0) - 1)
             .attr('height', d => vis.height - y(d.length))
             .attr('fill', 'steelblue')
-            .attr('stroke', 'black');  // Add this line to make sure bars are visible
+            .attr('stroke', 'black')  // Add this line to make sure bars are visible
+            .on('mouseover', function(event, d) {
+            d3.select(this).attr('fill', 'orange');
+            tooltip.transition()
+                .duration(200)
+                .style('opacity', .9);
+            tooltip.html(`Count: ${d.length}<br>${vis.selectedColumn} range: [${d.x0.toFixed(2)}, ${d.x1.toFixed(2)}]`)
+                .style('left', (event.pageX + 5) + 'px')
+                .style('top', (event.pageY - 35) + 'px')
+                .style('width', '150px')  // Increase width
+                .style('height', '70px'); // Increase height
+            })
+            .on('mouseout', function(d) {
+            d3.select(this).attr('fill', 'steelblue');
+            tooltip.transition()
+                .duration(500)
+                .style('opacity', 0);
+            });
 
         bars.exit().remove();
+
+        // Add tooltip
+        let tooltip = d3.select('body').append('div')
+            .attr('class', 'tooltip')
+            .style('position', 'absolute')
+            .style('text-align', 'center')
+            .style('width', '120px')
+            .style('height', '50px')
+            .style('padding', '2px')
+            .style('font', '12px sans-serif')
+            .style('background', 'lightsteelblue')
+            .style('border', '0px')
+            .style('border-radius', '8px')
+            .style('pointer-events', 'none')
+            .style('opacity', 0);
     }
 
     updateData = function (data, selectedColumn) {
