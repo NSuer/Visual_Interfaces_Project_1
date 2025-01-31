@@ -1,5 +1,5 @@
 class Chloropleth {
-    constructor(_config, _data, _defaultColumn) {
+    constructor(_config, _data, _defaultColumn, _descriptions) {
         this.config = {
             parentElement: _config.parentElement,
             containerWidth: _config.containerWidth || 500,
@@ -11,20 +11,17 @@ class Chloropleth {
         this.selectedColumn = '';
         this.defaultColumn = _defaultColumn;
         this.processedData = [];
+
+        this.title = [];
         // Load GeoJSON data
         d3.json('data/counties.geojson').then(geoData => {
             this.geoData = geoData;
-            console.log('geoData:', this.geoData);
-            console.log('Choropleth default column:', this.defaultColumn);
-            this.updateData(this.data, this.defaultColumn);
+            this.updateData(this.data, this.defaultColumn, _descriptions);
         });
     }
 
     initVis() {
         let vis = this;
-
-        console.log('Initializing choropleth');
-        console.log(vis.processedData);
 
         // Width and height as the inner dimensions of the chart area
         vis.width = vis.config.containerWidth - vis.config.margin.left - vis.config.margin.right;
@@ -40,17 +37,91 @@ class Chloropleth {
             .attr('transform', `translate(${vis.config.margin.left}, ${vis.config.margin.top})`);
 
         // Create color scale
-        vis.color = d3.scaleQuantize()
-            .range(d3.schemeBlues[9]);
+        vis.color = d3.scaleSequential(d3.interpolateTurbo);
 
         // Create tooltip
         vis.tooltip = d3.select('body').append('div')
             .attr('class', 'tooltip')
             .style('opacity', 0);
 
-        // Create legend
+        
+        // Create legend 
+        // the legend should be a gradient from 0 to 1 with the color as well as showing the viewing and selected color
+        
+        // Create a color scale
+        vis.color = d3.scaleSequential(d3.interpolateTurbo)
+            .domain([0, 1]);
+
+        // Create a legend
         vis.legend = vis.svg.append('g')
-            .attr('transform', `translate(${vis.width - 100}, ${vis.height - 20})`);
+            .attr('class', 'legend')
+            .attr('transform', `translate(${vis.width + vis.config.margin.left + 20}, ${vis.config.margin.top})`);
+
+        // Create a gradient
+        vis.legend.append('defs')
+            .append('linearGradient')
+            .attr('id', 'gradient')
+            .attr('x1', '0%')
+            .attr('y1', '100%')
+            .attr('x2', '0%')
+            .attr('y2', '0%')
+            .selectAll('stop')
+            .data(d3.ticks(0, 1, 10))
+            .enter()
+            .append('stop')
+            .attr('offset', d => `${100 * d}%`)
+            .attr('stop-color', d => vis.color(d));
+
+        // Create a rectangle with the gradient
+        vis.legend.append('rect')
+            .attr('width', 20)
+            .attr('height', vis.height)
+            .style('fill', 'url(#gradient)');
+
+        // Add text for the minimum value
+        vis.legend.append('text')
+            .attr('x', -30)
+            .attr('y', vis.height)
+            .text('0%');
+
+        // Add text for the maximum value
+        vis.legend.append('text')
+            .attr('x', -10)
+            .attr('y', 10)
+            .attr('text-anchor', 'end')
+            .text('100 %');
+
+        // Add text for the viewing color
+        vis.legend.append('text')
+            .attr('x', -110)
+            .attr('y', vis.height / 2 - 10)
+            .attr('text-anchor', 'start')
+            .text('Viewing Color');
+
+        // Add rectangle for the viewing color
+        vis.legend.append('rect')
+            .attr('x', -130)
+            .attr('y', vis.height / 2 - 20)
+            .attr('width', 20)
+            .attr('height', 10)
+            .style('fill', d3.schemeCategory10[1]);
+
+        // Add text for the selected color
+        vis.legend.append('text')
+            .attr('x', -110)
+            .attr('y', vis.height / 2 + 20)
+            .attr('text-anchor', 'start')
+            .text('Selected Color');
+
+        // Add rectangle for the selected color
+        vis.legend.append('rect')
+            .attr('x', -130)
+            .attr('y', vis.height / 2 + 10)
+            .attr('width', 20)
+            .attr('height', 10)
+            .style('fill', d3.schemeCategory10[3]);
+
+
 
         // Create projection
         vis.projection = d3.geoAlbersUsa()
@@ -75,8 +146,6 @@ class Chloropleth {
                 feature.properties.value = 0; // Default value if not found
             }
         });
-
-        console.log('GeoData with values:', vis.geoData);
 
         // Plot the map with filled color
         // Create an area at the bottom for displaying information
@@ -104,7 +173,7 @@ class Chloropleth {
             d3.select(this)
                 .transition()
                 .duration(100)
-                .style('fill', 'orange');
+                .style('fill', d3.schemeCategory10[1]);
 
             vis.infoText.text(`FIPS: ${d.properties.GEOID} | State: ${d.properties.state} | County: ${d.properties.county} | Percentage: ${d.properties.data}%`);
             })
@@ -121,18 +190,21 @@ class Chloropleth {
             });
     }
 
-    updateData(data, selectedColumn) {
+    updateData(data, selectedColumn, descriptions) {
         // Get only the counties in window.selectedCounties
         let selectedCounties = window.selectedCounties;
         if (selectedCounties.length > 0) {
             data = data.filter(d => selectedCounties.includes(d['FIPS']));
         }
 
+        // get the descriptions of the selected columns concat with and imbetween
+        this.title = descriptions[selectedColumn];
+
         this.selectedColumn = selectedColumn;
 
         // I need to fix the data so that it is imbetween 0 and 1 not 0 and 100
         this.processedData = data.map(d => ({
-            corrected_data: d[this.selectedColumn] /10,
+            corrected_data: d[this.selectedColumn] /100,
             data: d[this.selectedColumn],
             Fips: d['FIPS'],
             State: d['State'],

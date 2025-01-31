@@ -1,5 +1,5 @@
 class Scatterplot {
-    constructor(_config, _data, _defaultColumn) {
+    constructor(_config, _data, _defaultColumn, _descriptions) {
         this.config = {
             parentElement: _config.parentElement,
             containerWidth: _config.containerWidth || 500,
@@ -13,17 +13,15 @@ class Scatterplot {
         this.selectedXColumn = '';
         this.selectedYColumn = '';
         this.defaultColumn = _defaultColumn;
-        console.log('Scatterplot default column:', this.defaultColumn[1]);
+
+        this.title = [];
 
         // Call a class function
-        this.updateData(this.data, this.defaultColumn[0], this.defaultColumn[1]);
+        this.updateData(this.data, this.defaultColumn[0], this.defaultColumn[1], _descriptions);
     }
 
     initVis() {
         let vis = this;
-
-        console.log('Initializing scatterplot');
-        console.log(vis.data);
 
         // Width and height as the inner dimensions of the chart area
         vis.width = vis.config.containerWidth - vis.config.margin.left - vis.config.margin.right;
@@ -37,6 +35,7 @@ class Scatterplot {
         vis.chart = vis.svg.append('g')
             .attr('transform', `translate(${vis.config.margin.left}, ${vis.config.margin.top})`);
 
+
         // Create scales
         let x = d3.scaleLinear()
             .domain([0, 100])
@@ -47,8 +46,8 @@ class Scatterplot {
             .range([vis.height, 0]);
 
         // Create axes
-        let xAxis = d3.axisBottom(x);
-        let yAxis = d3.axisLeft(y);
+        let xAxis = d3.axisBottom(x).tickFormat(d => d + '%');
+        let yAxis = d3.axisLeft(y).tickFormat(d => d + '%');
 
         // Draw the axes
         vis.chart.append('g')
@@ -63,12 +62,12 @@ class Scatterplot {
         vis.chart.append('text')
             .attr('transform', `translate(${vis.width / 2}, ${vis.height + vis.config.margin.bottom - 5})`)
             .style('text-anchor', 'middle')
-            .text(this.selectedXColumn);
+            .text(`Percentage: ${vis.selectedXColumn}`);
 
         vis.chart.append('text')
             .attr('transform', `translate(${-vis.config.margin.left + 15}, ${vis.height / 2}) rotate(270)`)
             .style('text-anchor', 'middle')
-            .text(this.selectedYColumn);
+            .text(`Percentage: ${vis.selectedYColumn}`);
 
         // Create tooltip
         vis.tooltip = d3.select('body').append('div')
@@ -90,14 +89,14 @@ class Scatterplot {
             .attr('cx', d => x(d.Xdata))
             .attr('cy', d => y(d.Ydata))
             .attr('r', 5)
-            .attr('fill', 'steelblue')
+            .attr('fill', d3.schemeCategory10[0])
             .attr('fill-opacity', 0.5)
             .on('mouseover', function (event, d) {
                 d3.select(this)
                     .transition()
                     .duration(100)
                     .attr('r', 10)
-                    .attr('fill', 'orange')
+                    .attr('fill', d3.schemeCategory10[1])
                     .attr('fill-opacity', 1);
 
                 vis.tooltip.transition()
@@ -112,21 +111,74 @@ class Scatterplot {
                     .transition()
                     .duration(100)
                     .attr('r', 5)
-                    .attr('fill', 'steelblue')
+                    .attr('fill', d3.schemeCategory10[0])
                     .attr('fill-opacity', 0.5);
 
                 vis.tooltip.transition()
                     .duration(100)
                     .style('opacity', 0);
             });
+
+        // Add legend
+        let legend = vis.svg.append('g')
+            .attr('class', 'legend')
+            .attr('transform', `translate(${vis.width - 150}, ${vis.config.margin.top})`);
+
+        // Unselected data points
+        legend.append('rect')
+            .attr('x', 0)
+            .attr('y', 0)
+            .attr('width', 10)
+            .attr('height', 10)
+            .attr('fill', d3.schemeCategory10[0]);
+
+        legend.append('text')
+            .attr('x', 20)
+            .attr('y', 10)
+            .text('Unselected Data Points')
+            .style('font-size', '12px')
+            .attr('alignment-baseline', 'middle');
+
+        // Viewing data points
+        legend.append('rect')
+            .attr('x', 0)
+            .attr('y', 20)
+            .attr('width', 10)
+            .attr('height', 10)
+            .attr('fill', d3.schemeCategory10[1]);
+
+        legend.append('text')
+            .attr('x', 20)
+            .attr('y', 30)
+            .text('Viewing Data Points')
+            .style('font-size', '12px')
+            .attr('alignment-baseline', 'middle');
+
+        // // Selected data points
+        // legend.append('rect')
+        //     .attr('x', 0)
+        //     .attr('y', 40)
+        //     .attr('width', 10)
+        //     .attr('height', 10)
+        //     .attr('fill', d3.schemeCategory10[2]);
+
+        // legend.append('text')
+        //     .attr('x', 20)
+        //     .attr('y', 50)
+        //     .text('Selected Data Points')
+        //     .style('font-size', '12px')
+        //     .attr('alignment-baseline', 'middle');
     }
 
-    updateData = function (data, selectedXColumn, selectedYColumn) {
+    updateData = function (data, selectedXColumn, selectedYColumn, descriptions) {
         // Get only the counties in window.selectedCounties
         let selectedCounties = window.selectedCounties;
         if (selectedCounties.length > 0) {
             data = data.filter(d => selectedCounties.includes(d['FIPS']));
         }
+
+        // get the descriptions of the selected columns concat with and imbetween
+        this.title = descriptions[selectedXColumn] + ' and ' + descriptions[selectedYColumn];
 
         this.selectedXColumn = selectedXColumn;
         this.selectedYColumn = selectedYColumn;
