@@ -171,13 +171,6 @@ class Scatterplot {
     }
 
     updateData = function (data, selectedXColumn, selectedYColumn) {
-        // Get only the counties in window.selectedCounties
-        let selectedCounties = window.selectedCounties;
-        if (selectedCounties.length > 0) {
-            data = data.filter(d => selectedCounties.includes(d['FIPS']));
-        }
-
-
         this.selectedXColumn = selectedXColumn;
         this.selectedYColumn = selectedYColumn;
 

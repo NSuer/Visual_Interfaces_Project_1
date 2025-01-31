@@ -3,7 +3,6 @@ let scatterData = {};
 let chloropleth1Data = {};
 let chloropleth2Data = {};
 window.selectedCounties = [];
-window.allCounties = [];
 
 d3.csv('data/MyData.csv')
 	.then(data => {
@@ -14,10 +13,6 @@ d3.csv('data/MyData.csv')
 
 		// get the columns that include percentages or rates, given by 'pct' or 'rate' either uppercase or lowercase
 		let columns = data.columns.filter(column => column.toLowerCase().includes('pct') || column.toLowerCase().includes('rate') || column.toLowerCase().includes('deep'));
-
-		// Set selectedCounties and allCounties to all the counties in the dataset
-		window.selectedCounties = data.map(d => d.FIPS);
-		window.allCounties = data.map(d => d.FIPS);
 
 		// remove the columns that are not percentages except for the FIPS, State, and County columns
 		data = data.map(row => {

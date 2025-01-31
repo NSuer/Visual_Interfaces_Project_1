@@ -191,12 +191,6 @@ class Chloropleth {
     }
 
     updateData(data, selectedColumn) {
-        // Get only the counties in window.selectedCounties
-        let selectedCounties = window.selectedCounties;
-        if (selectedCounties.length > 0) {
-            data = data.filter(d => selectedCounties.includes(d['FIPS']));
-        }
-
         this.selectedColumn = selectedColumn;
 
         // I need to fix the data so that it is imbetween 0 and 1 not 0 and 100

@@ -31,7 +31,7 @@ TODO
 ## AI and Collaboration
 - I use github copilot when I program. This is used more as an autocomplete tool than anything.
 - I used google to learn how to do the cloropleth map. I lost the link though. The code is mostly my own though.
-The user should be able to brush within the histogram, selecting a set of counties. All the visualizations in your application should update to either highlight the selected counties or filter to only show the selected counties. The selected counties are in window.selectedCounties = []; Have a way for the use to return to baseline. All counties are stored in window.allCounties = []; send an event so other graphs update too. The brush should work by clicking on the bars of the histogram and dragging to the right. The brush should be able to select multiple bars. The brush should be able to select a single bar. The brush should be able to select all bars. The brush should be able to select no bars. The brush should be able to select bars in any order. The brush should be able to select bars in any direction. The brush should be able to select bars in any size. The brush should be able to select bars in any position
+
 
 ## Demo
 

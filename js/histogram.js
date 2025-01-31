@@ -198,12 +198,6 @@ class Histogram {
     }
 
     updateData = function (data, selectedColumns) {
-        // Get only the counties in window.selectedCounties
-        let selectedCounties = window.selectedCounties;
-        if (selectedCounties.length > 0) {
-            data = data.filter(d => selectedCounties.includes(d['FIPS']));
-        }
-
         this.selectedColumns = selectedColumns;
 
         let selectedData = data.map(d => {
