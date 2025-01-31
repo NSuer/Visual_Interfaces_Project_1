@@ -190,15 +190,12 @@ class Chloropleth {
             });
     }
 
-    updateData(data, selectedColumn, descriptions) {
+    updateData(data, selectedColumn) {
         // Get only the counties in window.selectedCounties
         let selectedCounties = window.selectedCounties;
         if (selectedCounties.length > 0) {
             data = data.filter(d => selectedCounties.includes(d['FIPS']));
         }
-
-        // get the descriptions of the selected columns concat with and imbetween
-        this.title = descriptions[selectedColumn];
 
         this.selectedColumn = selectedColumn;
 

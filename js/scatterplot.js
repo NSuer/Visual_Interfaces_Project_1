@@ -170,15 +170,13 @@ class Scatterplot {
         //     .attr('alignment-baseline', 'middle');
     }
 
-    updateData = function (data, selectedXColumn, selectedYColumn, descriptions) {
+    updateData = function (data, selectedXColumn, selectedYColumn) {
         // Get only the counties in window.selectedCounties
         let selectedCounties = window.selectedCounties;
         if (selectedCounties.length > 0) {
             data = data.filter(d => selectedCounties.includes(d['FIPS']));
         }
 
-        // get the descriptions of the selected columns concat with and imbetween
-        this.title = descriptions[selectedXColumn] + ' and ' + descriptions[selectedYColumn];
 
         this.selectedXColumn = selectedXColumn;
         this.selectedYColumn = selectedYColumn;

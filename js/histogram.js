@@ -197,7 +197,7 @@ class Histogram {
             .style('opacity', 0);
     }
 
-    updateData = function (data, selectedColumns, descriptions) {
+    updateData = function (data, selectedColumns) {
         // Get only the counties in window.selectedCounties
         let selectedCounties = window.selectedCounties;
         if (selectedCounties.length > 0) {
@@ -205,11 +205,6 @@ class Histogram {
         }
 
         this.selectedColumns = selectedColumns;
-
-        console.log(descriptions)
-
-        // get the descriptions of the selected columns concat with and imbetween
-        this.title = descriptions[selectedColumns[0]] + ' and ' + descriptions[selectedColumns[1]];
 
         let selectedData = data.map(d => {
             let obj = {};
@@ -228,7 +223,13 @@ class Histogram {
 
     // Method to add event listener
     addEventListener() {
-        window.addEventListener('selectedCountiesChanged', (event) => {
+        window.addEventListener('selectedCountiesChangedScatter', (event) => {
+            this.updateData(this.data, this.selectedColumns);
+        });
+        window.addEventListener('selectedCountiesChangedChloropleth1', (event) => {
+            this.updateData(this.data, this.selectedColumns);
+        });
+        window.addEventListener('selectedCountiesChangedChloropleth2', (event) => {
             this.updateData(this.data, this.selectedColumns);
         });
     }

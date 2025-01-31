@@ -32,8 +32,6 @@ d3.csv('data/MyData.csv')
 
 		//cut out the first row and save it as descriptions for the columns
 		let descriptions = data[0];
-		console.log('Descriptions of columns:');
-		console.log(descriptions);
 
 		data = data.slice(1);
 		data.columns = columns;
