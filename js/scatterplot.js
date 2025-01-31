@@ -118,6 +118,7 @@ class Scatterplot {
                     .duration(100)
                     .attr('r', 5)
                     .attr('stroke', 'black')
+                    .attr('stroke-width', 0.2);
 
                 vis.tooltip.transition()
                     .duration(100)
