@@ -16,6 +16,8 @@ class Scatterplot {
 
         this.title = [];
 
+        this.addEventListener();
+
         // Call a class function
         this.updateData(this.data, this.defaultColumn[0], this.defaultColumn[1], _descriptions);
     }
@@ -48,6 +50,8 @@ class Scatterplot {
         // Create axes
         let xAxis = d3.axisBottom(x).tickFormat(d => d + '%');
         let yAxis = d3.axisLeft(y).tickFormat(d => d + '%');
+
+        let selectedColor = d3.schemeCategory10[3];
 
         // Draw the axes
         vis.chart.append('g')
@@ -89,15 +93,17 @@ class Scatterplot {
             .attr('cx', d => x(d.Xdata))
             .attr('cy', d => y(d.Ydata))
             .attr('r', 5)
-            .attr('fill', d3.schemeCategory10[0])
+            .attr('fill', d => selectedCounties.includes(d.Fips) ? selectedColor : d3.schemeCategory10[0])
+            .attr('stroke', 'black')
+            .attr('stroke-width', 0.2)
             .attr('fill-opacity', 0.5)
             .on('mouseover', function (event, d) {
                 d3.select(this)
                     .transition()
                     .duration(100)
                     .attr('r', 10)
-                    .attr('fill', d3.schemeCategory10[1])
-                    .attr('fill-opacity', 1);
+                    .attr('stroke', d3.schemeCategory10[1])
+                    .attr('stroke-width', 1);
 
                 vis.tooltip.transition()
                     .duration(100)
@@ -111,8 +117,7 @@ class Scatterplot {
                     .transition()
                     .duration(100)
                     .attr('r', 5)
-                    .attr('fill', d3.schemeCategory10[0])
-                    .attr('fill-opacity', 0.5);
+                    .attr('stroke', 'black')
 
                 vis.tooltip.transition()
                     .duration(100)
@@ -154,20 +159,20 @@ class Scatterplot {
             .style('font-size', '12px')
             .attr('alignment-baseline', 'middle');
 
-        // // Selected data points
-        // legend.append('rect')
-        //     .attr('x', 0)
-        //     .attr('y', 40)
-        //     .attr('width', 10)
-        //     .attr('height', 10)
-        //     .attr('fill', d3.schemeCategory10[2]);
+        // Selected data points
+        legend.append('rect')
+            .attr('x', 0)
+            .attr('y', 40)
+            .attr('width', 10)
+            .attr('height', 10)
+            .attr('fill', selectedColor);
 
-        // legend.append('text')
-        //     .attr('x', 20)
-        //     .attr('y', 50)
-        //     .text('Selected Data Points')
-        //     .style('font-size', '12px')
-        //     .attr('alignment-baseline', 'middle');
+        legend.append('text')
+            .attr('x', 20)
+            .attr('y', 50)
+            .text('Selected Data Points')
+            .style('font-size', '12px')
+            .attr('alignment-baseline', 'middle');
     }
 
     updateData = function (data, selectedXColumn, selectedYColumn) {
@@ -177,6 +182,7 @@ class Scatterplot {
         this.processedData = data.map(d => ({
             Xdata: d[this.selectedXColumn],
             Ydata: d[this.selectedYColumn],
+            color: d3.schemeCategory10[0],
             Fips: d['FIPS'],
             State: d['State'],
             County: d['County']

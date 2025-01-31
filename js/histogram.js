@@ -12,6 +12,8 @@ class Histogram {
         this.defaultColumns = _defaultColumns;
         this.title = [];
 
+        this.addEventListener();
+
         // Call a class function
         this.updateData(this.data, this.defaultColumns, _descriptions);
     }
@@ -42,6 +44,7 @@ class Histogram {
                     bin.x1 = bin.x1 !== undefined ? bin.x1 : bin[bin.length - 1];
                     bin.column = col;
                     bin.index = i;
+                    bin.fips = bin.map(d => vis.data.find(data => data[vis.selectedColumns[i]] === d).FIPS); // Add FIPS for all data points in each bin
                     return bin;
                 });
         });
@@ -153,12 +156,11 @@ class Histogram {
                 .attr('y', d => y(d.length))
                 .attr('width', d => (x(d.x1) - x(d.x0)) / 2 - 1)
                 .attr('height', d => vis.height - y(d.length))
-                .attr('fill', colors(i))
+                .attr('fill', d => window.selectedCounties.some(f => d.fips.includes(f)) ? selectedColor : colors(i))
                 .attr('opacity', 0.7)
-                .attr('stroke', colors(i))
+                .attr('stroke', 'black')
                 .on('mouseover', function (event, d) {
                     d3.select(this)
-                        .attr('fill', mouseoverColor)
                         .attr('opacity', 1)
                         .attr('stroke', mouseoverColor);
                     tooltip.transition()
@@ -170,9 +172,28 @@ class Histogram {
                 })
                 .on('mouseout', function (event, d) {
                     d3.select(this)
-                        .attr('fill', colors(d.index))
                         .attr('opacity', 0.7)
-                        .attr('stroke', colors(d.index));
+                        .attr('stroke', 'black');
+                    tooltip.transition()
+                        .duration(500)
+                        .style('opacity', 0);
+                })
+                .on('click', function (event, d) {
+                    const fips = d3.select(this).data()[0].fips;
+                    //sort the fips
+                    fips.sort();
+                    console.log(fips);
+
+                    fips.forEach(f => {
+                        const index = window.selectedCounties.indexOf(f);
+                        if (index === -1) {
+                            window.selectedCounties.push(f);
+                        } else {
+                            window.selectedCounties.splice(index, 1);
+                        }
+                    })
+                    console.log(window.selectedCounties);
+                    window.dispatchEvent(new Event('selectedCountiesChanged'));
                     tooltip.transition()
                         .duration(500)
                         .style('opacity', 0);
@@ -200,15 +221,13 @@ class Histogram {
     updateData = function (data, selectedColumns) {
         this.selectedColumns = selectedColumns;
 
-        let selectedData = data.map(d => {
-            let obj = {};
-            this.selectedColumns.forEach(col => {
-                obj[col] = d[col];
-            });
-            return obj;
-        });
-
-        this.data = selectedData;
+        this.processedData = data.map(d => ({
+            Xdata: d[this.selectedColumns[0]],
+            Ydata: d[this.selectedColumns[1]],
+            Fips: d['FIPS'],
+            State: d['State'],
+            County: d['County']
+        }));
         // clear then re-draw the histogram
         d3.select(this.config.parentElement).selectAll('*').remove();
 
@@ -217,13 +236,7 @@ class Histogram {
 
     // Method to add event listener
     addEventListener() {
-        window.addEventListener('selectedCountiesChangedScatter', (event) => {
-            this.updateData(this.data, this.selectedColumns);
-        });
-        window.addEventListener('selectedCountiesChangedChloropleth1', (event) => {
-            this.updateData(this.data, this.selectedColumns);
-        });
-        window.addEventListener('selectedCountiesChangedChloropleth2', (event) => {
+        window.addEventListener('selectedCountiesChanged', (event) => {
             this.updateData(this.data, this.selectedColumns);
         });
     }

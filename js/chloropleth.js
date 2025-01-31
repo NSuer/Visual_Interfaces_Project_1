@@ -13,6 +13,8 @@ class Chloropleth {
         this.processedData = [];
 
         this.title = [];
+
+        this.addEventListener();
         // Load GeoJSON data
         d3.json('data/counties.geojson').then(geoData => {
             this.geoData = geoData;
@@ -44,10 +46,10 @@ class Chloropleth {
             .attr('class', 'tooltip')
             .style('opacity', 0);
 
-        
+
         // Create legend 
         // the legend should be a gradient from 0 to 1 with the color as well as showing the viewing and selected color
-        
+
         // Create a color scale
         vis.color = d3.scaleSequential(d3.interpolateTurbo)
             .domain([0, 1]);
@@ -155,7 +157,7 @@ class Chloropleth {
         vis.infoText = vis.infoArea.append('text')
             .attr('class', 'info-text')
             .attr('x', vis.width / 2)
-            .attr('y', -this.config.containerHeight + 10 )
+            .attr('y', -this.config.containerHeight + 10)
             .attr('text-anchor', 'middle')
             .style('font-size', '12px')
             .style('fill', '#000');
@@ -167,7 +169,11 @@ class Chloropleth {
             .attr('d', vis.path)
             .style('fill', function (d) {
             let value = d.properties.value;
-            return value ? vis.color(value) : '#ccc'; // Default color for missing data
+            if (window.selectedCounties && window.selectedCounties.length > 0) {
+                return window.selectedCounties.includes(d.properties.GEOID) ? (value ? vis.color(value) : '#ccc') : '#e0e0e0'; // Grey out unselected counties
+            } else {
+                return value ? vis.color(value) : '#ccc'; // Default color for missing data
+            }
             })
             .on('mouseover', function (event, d) {
             d3.select(this)
@@ -183,7 +189,11 @@ class Chloropleth {
                 .duration(100)
                 .style('fill', function (d) {
                 let value = d.properties.value;
-                return value ? vis.color(value) : '#ccc';
+                if (window.selectedCounties && window.selectedCounties.length > 0) {
+                    return window.selectedCounties.includes(d.properties.GEOID) ? (value ? vis.color(value) : '#ccc') : '#e0e0e0'; // Grey out unselected counties
+                } else {
+                    return value ? vis.color(value) : '#ccc'; // Default color for missing data
+                }
                 });
 
             vis.infoText.text('');
@@ -195,7 +205,7 @@ class Chloropleth {
 
         // I need to fix the data so that it is imbetween 0 and 1 not 0 and 100
         this.processedData = data.map(d => ({
-            corrected_data: d[this.selectedColumn] /100,
+            corrected_data: d[this.selectedColumn] / 100,
             data: d[this.selectedColumn],
             Fips: d['FIPS'],
             State: d['State'],
