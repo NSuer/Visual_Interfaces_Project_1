@@ -1,5 +1,8 @@
 # Visual_Interfaces_Project_1
 
+Link to hosted project: https://nsuer.github.io/Visual_Interfaces_Project_1/
+Link to github repository: https://github.com/NSuer/Visual_Interfaces_Project_1
+
 ## Motivation
 In this project I want to help a general audience understand socio-economic data points about US counties. The theme for my project is "Exploring economy and how they impact military service and verterans". I wanted to do this project because I am related to many veterans and I wanted to understand how their service has impacted their lives and the lives of those around them. I also wanted to understand how the economy of the area they live in has impacted their lives and if it impacted their decision to join the military.
 
