@@ -1,5 +1,5 @@
 class Histogram {
-    constructor(_config, _data, _defaultColumn) {
+    constructor(_config, _data, _defaultColumns) {
         this.config = {
             parentElement: _config.parentElement,
             containerWidth: _config.containerWidth || 500,
@@ -8,11 +8,11 @@ class Histogram {
         }
 
         this.data = _data;
-        this.selectedColumn = '';
-        this.defaultColumn = _defaultColumn;
+        this.selectedColumns = [];
+        this.defaultColumns = _defaultColumns;
 
         // Call a class function
-        this.updateData(this.data, this.defaultColumn);
+        this.updateData(this.data, this.defaultColumns);
     }
 
     initVis() {
@@ -33,16 +33,20 @@ class Histogram {
         vis.chart = vis.svg.append('g')
             .attr('transform', `translate(${vis.config.margin.left}, ${vis.config.margin.top})`);
 
-        // Create bins
-        let bins = d3.histogram()
-            .domain([0, 100])
-            .thresholds(d3.range(0, 100, 1))
-            (vis.data)
-            .map(bin => {
-            bin.x0 = bin.x0 !== undefined ? bin.x0 : bin[0];
-            bin.x1 = bin.x1 !== undefined ? bin.x1 : bin[bin.length - 1];
-            return bin;
-            });
+        // Create bins for each selected column
+        let bins = vis.selectedColumns.map((col, i) => {
+            return d3.histogram()
+                .domain([0, 100])
+                .thresholds(d3.range(0, 100, 1))
+                (vis.data.map(d => d[col]))
+                .map(bin => {
+                    bin.x0 = bin.x0 !== undefined ? bin.x0 : bin[0];
+                    bin.x1 = bin.x1 !== undefined ? bin.x1 : bin[bin.length - 1];
+                    bin.column = col;
+                    bin.index = i;
+                    return bin;
+                });
+        });
 
         console.log('Bins:', bins);
 
@@ -52,7 +56,7 @@ class Histogram {
             .range([0, vis.width]);
 
         let y = d3.scaleLinear()
-            .domain([0, d3.max(bins, d => d.length)])
+            .domain([0, d3.max(bins.flat(), d => d.length)])
             .range([vis.height, 0]);
 
         // Create axes
@@ -74,44 +78,48 @@ class Histogram {
         vis.chart.append('text')
             .attr('transform', `translate(${vis.width / 2}, ${vis.height + vis.config.margin.bottom - 5})`)
             .style('text-anchor', 'middle')
-            .text(this.selectedColumn);
+            .text(this.selectedColumns.join(', '));
 
         vis.chart.append('text')
             .attr('transform', `translate(${-vis.config.margin.left + 15}, ${vis.height / 2}) rotate(270)`)
             .style('text-anchor', 'middle')
             .text('Count');
 
-        // Create bars
-        let bars = vis.chart.selectAll('.bar')
-            .data(bins.filter(d => d.x0 !== undefined && d.x1 !== undefined));
+        // Create bars for each column
+        let colors = ['steelblue', 'orange'];
+        bins.forEach((binData, i) => {
+            let bars = vis.chart.selectAll(`.bar-${i}`)
+                .data(binData.filter(d => d.x0 !== undefined && d.x1 !== undefined));
 
-        bars.enter()
-            .append('rect')
-            .attr('class', 'bar')
-            .merge(bars)
-            .attr('x', d => x(d.x0))
-            .attr('y', d => y(d.length))
-            .attr('width', d => x(d.x1) - x(d.x0) - 1)
-            .attr('height', d => vis.height - y(d.length))
-            .attr('fill', 'steelblue')
-            .attr('stroke', 'black')  // Add this line to make sure bars are visible
-            .on('mouseover', function(event, d) {
-            d3.select(this).attr('fill', 'orange');
-            tooltip.transition()
-                .duration(200)
-                .style('opacity', .9);
-            tooltip.html(`Count: ${d.length}<br> Percentage range: [${d.x0}%, ${d.x1}%]`)
-                .style('left', (event.pageX + 5) + 'px')
-                .style('top', (event.pageY - 35) + 'px')
-            })
-            .on('mouseout', function(d) {
-            d3.select(this).attr('fill', 'steelblue');
-            tooltip.transition()
-                .duration(500)
-                .style('opacity', 0);
-            });
+            bars.enter()
+                .append('rect')
+                .attr('class', `bar bar-${i}`)
+                .merge(bars)
+                .attr('x', d => x(d.x0) + (i * (x(d.x1) - x(d.x0)) / 2))
+                .attr('y', d => y(d.length))
+                .attr('width', d => (x(d.x1) - x(d.x0)) / 2 - 1)
+                .attr('height', d => vis.height - y(d.length))
+                .attr('fill', colors[i])
+                .attr('opacity', 0.7)
+                .attr('stroke', 'black')
+                .on('mouseover', function(event, d) {
+                    d3.select(this).attr('fill', 'red');
+                    tooltip.transition()
+                        .duration(200)
+                        .style('opacity', .9);
+                    tooltip.html(`Count: ${d.length}<br> Percentage range: [${d.x0}%, ${d.x1}%]`)
+                        .style('left', (event.pageX + 5) + 'px')
+                        .style('top', (event.pageY - 35) + 'px')
+                })
+                .on('mouseout', function(event, d) {
+                    d3.select(this).attr('fill', colors[d.index]);
+                    tooltip.transition()
+                        .duration(500)
+                        .style('opacity', 0);
+                });
 
-        bars.exit().remove();
+            bars.exit().remove();
+        });
 
         // Add tooltip
         let tooltip = d3.select('body').append('div')
@@ -129,10 +137,22 @@ class Histogram {
             .style('opacity', 0);
     }
 
-    updateData = function (data, selectedColumn) {
-        this.selectedColumn = selectedColumn;
+    updateData = function (data, selectedColumns) {
+        // Get only the counties in window.selectedCounties
+        let selectedCounties = window.selectedCounties;
+        if (selectedCounties.length > 0) {
+            data = data.filter(d => selectedCounties.includes(d['FIPS']));
+        }
+        
+        this.selectedColumns = selectedColumns;
 
-        let selectedData = data.map(d => d[this.selectedColumn]);
+        let selectedData = data.map(d => {
+            let obj = {};
+            this.selectedColumns.forEach(col => {
+                obj[col] = d[col];
+            });
+            return obj;
+        });
 
         console.log('Selected data:');
         console.log(selectedData);
@@ -142,5 +162,12 @@ class Histogram {
         d3.select(this.config.parentElement).selectAll('*').remove();
 
         this.initVis();
+    }
+
+    // Method to add event listener
+    addEventListener() {
+        window.addEventListener('selectedCountiesChanged', (event) => {
+            this.updateData(this.data, this.selectedColumns);
+        });
     }
 }

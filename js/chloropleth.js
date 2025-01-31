@@ -122,6 +122,12 @@ class Chloropleth {
     }
 
     updateData(data, selectedColumn) {
+        // Get only the counties in window.selectedCounties
+        let selectedCounties = window.selectedCounties;
+        if (selectedCounties.length > 0) {
+            data = data.filter(d => selectedCounties.includes(d['FIPS']));
+        }
+
         this.selectedColumn = selectedColumn;
 
         // I need to fix the data so that it is imbetween 0 and 1 not 0 and 100
@@ -137,5 +143,12 @@ class Chloropleth {
         d3.select(this.config.parentElement).selectAll('*').remove();
 
         this.initVis();
+    }
+
+    // Method to add event listener
+    addEventListener() {
+        window.addEventListener('selectedCountiesChanged', (event) => {
+            this.updateData(this.data, this.selectedColumn);
+        });
     }
 }

@@ -4,6 +4,8 @@ let histogramData = {};
 let scatterData = {};
 let chloropleth1Data = {};
 let chloropleth2Data = {};
+window.selectedCounties = [];
+window.allCounties = [];
 
 d3.csv('data/MyData.csv')
 	.then(data => {
@@ -18,6 +20,12 @@ d3.csv('data/MyData.csv')
 		let columns = data.columns.filter(column => column.toLowerCase().includes('pct') || column.toLowerCase().includes('rate') || column.toLowerCase().includes('deep'));
 		console.log('Columns in the dataset:');
 		console.log(columns);
+
+		// Set selectedCounties and allCounties to all the counties in the dataset
+		window.selectedCounties = data.map(d => d.FIPS);
+		console.log('All counties in the dataset:');
+		console.log(window.selectedCounties);
+		window.allCounties = data.map(d => d.FIPS);
 
 		// remove the columns that are not percentages except for the FIPS, State, and County columns
 		data = data.map(row => {
@@ -49,7 +57,7 @@ d3.csv('data/MyData.csv')
 		let chloropleth1Container = d3.select('#chloropleth1').node().getBoundingClientRect();
 		let chloropleth2Container = d3.select('#chloropleth2').node().getBoundingClientRect();
 
-		let defaultHistogramColumn = 'Deep_Pov_All';
+		let defaultHistogramColumns = ['Deep_Pov_All', 'Vets18OPct'];
 		let defaultScatterColumns = ['Deep_Pov_All', 'Vets18OPct'];
 		let defaultChloroplethColumns = ['Deep_Pov_All', 'Vets18OPct'];
 
@@ -57,7 +65,7 @@ d3.csv('data/MyData.csv')
 			'parentElement': '#histogram',
 			'containerHeight': histogramContainer.height,
 			'containerWidth': histogramContainer.width
-		}, histogramData, defaultHistogramColumn);
+		}, histogramData, defaultHistogramColumns);
 
 		// Scatterplot
 		let scatterplot = new Scatterplot({
@@ -82,8 +90,8 @@ d3.csv('data/MyData.csv')
 		// Create dropdowns for each graph
 		const columnsDropdown = columns.filter(column => column !== 'FIPS' && column !== 'State' && column !== 'County');
 
-		// Create dropdown for Histogram
-		d3.select('#histogram-dropdown')
+		// Create 1st dropdown for Histogram
+		d3.select('#histogram-1-dropdown')
 			.selectAll('option')
 			.data(columnsDropdown)
 			.enter()
@@ -91,8 +99,20 @@ d3.csv('data/MyData.csv')
 			.text(d => d)
 			.attr('value', d => d);
 
-		d3.select('#histogram-dropdown').property('value', defaultHistogramColumn);
-		d3.select('#histogram-description').text(descriptions[defaultHistogramColumn]);
+		d3.select('#histogram-1-dropdown').property('value', defaultHistogramColumns[0]);
+		d3.select('#histogram-1-description').text(descriptions[defaultHistogramColumns[0]]);
+
+		// Create 2nd dropdown for Histogram
+		d3.select('#histogram-2-dropdown')
+			.selectAll('option')
+			.data(columnsDropdown)
+			.enter()
+			.append('option')
+			.text(d => d)
+			.attr('value', d => d);
+
+		d3.select('#histogram-2-dropdown').property('value', defaultHistogramColumns[1]);
+		d3.select('#histogram-2-description').text(descriptions[defaultHistogramColumns[1]]);
 
 		// Create dropdown for Scatterplot X-axis
 		d3.select('#scatterplot-x-dropdown')
@@ -142,10 +162,16 @@ d3.csv('data/MyData.csv')
 		d3.select('#chloropleth-description2').text(descriptions[defaultChloroplethColumns[1]]);
 
 		// Event listeners for dropdowns to update graphs and descriptions
-		d3.select('#histogram-dropdown').on('change', function () {
-			let selectedColumn = d3.select(this).property('value');
-			histogram.updateData(data, selectedColumn);
-			d3.select('#histogram-description').text(descriptions[selectedColumn]);
+		d3.select('#histogram-1-dropdown').on('change', function () {
+			let selectedColumns = [d3.select(this).property('value'), d3.select('#histogram-2-dropdown').property('value')];
+			histogram.updateData(data, selectedColumns);
+			d3.select('#histogram-1-description').text(descriptions[selectedColumns[0]]);
+		});
+
+		d3.select('#histogram-2-dropdown').on('change', function () {
+			let selectedColumns = [d3.select('#histogram-1-dropdown').property('value'), d3.select(this).property('value')];
+			histogram.updateData(data, selectedColumns);
+			d3.select('#histogram-2-description').text(descriptions[selectedColumns[1]]);
 		});
 
 		d3.select('#scatterplot-x-dropdown').on('change', function () {
