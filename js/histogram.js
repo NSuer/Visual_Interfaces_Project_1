@@ -1,5 +1,5 @@
 class Histogram {
-    constructor(_config, _data, _defaultColumns, _descriptions) {
+    constructor(_config, _data, _defaultColumn, _descriptions) {
         this.config = {
             parentElement: _config.parentElement,
             containerWidth: _config.containerWidth || 500,
@@ -8,8 +8,8 @@ class Histogram {
         }
 
         this.data = _data;
-        this.selectedColumns = [];
-        this.defaultColumns = _defaultColumns;
+        this.selectedColumn = [];
+        this.defaultColumn = _defaultColumn;
         this.title = [];
         this.brushed = this.brushed.bind(this);
 
@@ -17,7 +17,7 @@ class Histogram {
         this.addEventListener();
 
         // Call a class function
-        this.updateData(this.data, this.defaultColumns, _descriptions);
+        this.updateData(this.data, this.defaultColumn, _descriptions);
     }
 
     initVis() {
@@ -60,7 +60,7 @@ class Histogram {
         let vis = this;
 
         // Create bins for each selected column
-        let bins = vis.selectedColumns.map((col, i) => {
+        let bins = vis.selectedColumn.map((col, i) => {
             return d3.histogram()
                 .domain([0, 100])
                 .thresholds(d3.range(0, 100, 1))
@@ -70,7 +70,7 @@ class Histogram {
                     bin.x1 = bin.x1 !== undefined ? bin.x1 : bin[bin.length - 1];
                     bin.column = col;
                     bin.index = i;
-                    bin.fips = bin.map(d => vis.data.find(data => data[vis.selectedColumns[i]] === d).FIPS); // Add FIPS for all data points in each bin
+                    bin.fips = bin.map(d => vis.data.find(data => data[vis.selectedColumn[i]] === d).FIPS); // Add FIPS for all data points in each bin
                     return bin;
                 });
         });
@@ -117,28 +117,53 @@ class Histogram {
 
         // Add legend
         let legend = vis.svg.append('g')
-            .attr('transform', `translate(${vis.width - 100}, 20)`);
-        legend.attr('transform', `translate(${vis.width - 100}, ${vis.height / 2 - vis.selectedColumns.length * 10})`);
+            .attr('class', 'legend')
+            .attr('transform', `translate(${vis.width - 150}, ${vis.config.margin.top})`);
 
-        legend.selectAll('rect')
-            .data(vis.selectedColumns)
-            .enter()
-            .append('rect')
+        // Unselected data points
+        legend.append('rect')
             .attr('x', 0)
-            .attr('y', (_, i) => i * 20)
+            .attr('y', 0)
             .attr('width', 10)
             .attr('height', 10)
-            .attr('fill', (_, i) => colors(i));
+            .attr('fill', d3.schemeCategory10[0]);
 
-        legend.selectAll('text')
-            .data(vis.selectedColumns)
-            .enter()
-            .append('text')
+        legend.append('text')
             .attr('x', 20)
-            .attr('y', (_, i) => i * 20 + 10)
-            .text(d => d)
+            .attr('y', 10)
+            .text('Unselected Data Points')
             .style('font-size', '12px')
-            .style('font-weight', 'bold');
+            .attr('alignment-baseline', 'middle');
+
+        // Viewing data points
+        legend.append('rect')
+            .attr('x', 0)
+            .attr('y', 20)
+            .attr('width', 10)
+            .attr('height', 10)
+            .attr('fill', d3.schemeCategory10[1]);
+
+        legend.append('text')
+            .attr('x', 20)
+            .attr('y', 30)
+            .text('Viewing Data Points')
+            .style('font-size', '12px')
+            .attr('alignment-baseline', 'middle');
+
+        // Selected data points
+        legend.append('rect')
+            .attr('x', 0)
+            .attr('y', 40)
+            .attr('width', 10)
+            .attr('height', 10)
+            .attr('fill', selectedColor);
+
+        legend.append('text')
+            .attr('x', 20)
+            .attr('y', 50)
+            .text('Selected Data Points')
+            .style('font-size', '12px')
+            .attr('alignment-baseline', 'middle');
 
         bins.forEach((binData, i) => {
             let bars = vis.chart.selectAll(`.bar-${i}`)
@@ -215,17 +240,18 @@ class Histogram {
             .style('opacity', 0);
     }
 
-    updateData = function (data, selectedColumns) {
-        this.selectedColumns = selectedColumns;
+    updateData = function (data, selectedColumn, descriptions) {
+        this.selectedColumn = Array.isArray(selectedColumn) ? selectedColumn : [selectedColumn];
+        console.log(this.selectedColumn);
 
         this.processedData = data.map(d => ({
-            Xdata: d[this.selectedColumns[0]],
-            Ydata: d[this.selectedColumns[1]],
+            Xdata: d[this.selectedColumn],
             Fips: d['FIPS'],
             State: d['State'],
             County: d['County']
         }));
         // clear then re-draw the histogram
+        console.log(this.processedData);
 
         this.renderVis();
     }
@@ -234,7 +260,7 @@ class Histogram {
     addEventListener() {
         window.addEventListener('selectedCountiesChanged', () => {
             if (this.hasSelectedCountiesChanged()) {
-                this.updateData(this.data, this.selectedColumns);
+                this.updateData(this.data, this.selectedColumn);
             }
         });
     }

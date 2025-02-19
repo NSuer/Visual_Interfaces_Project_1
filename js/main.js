@@ -1,4 +1,5 @@
-let histogramData = {};
+let histogram1Data = {};
+let histogram2Data = {};
 let scatterData = {};
 let chloropleth1Data = {};
 let chloropleth2Data = {};
@@ -31,29 +32,38 @@ d3.csv('data/MyData.csv')
 		data = data.slice(1);
 		data.columns = columns;
 
-		histogramData = data;
+		histogram1Data = data;
+		histogram2Data = data;
 		scatterData = data;
 		chloropleth1Data = data;
 		chloropleth2Data = data;
 
 		// Histogram
-		let histogramContainer = d3.select('#histogram').node().getBoundingClientRect();
+		let histogram1Container = d3.select('#histogram1').node().getBoundingClientRect();
+		let histogram2Container = d3.select('#histogram2').node().getBoundingClientRect();
 		let scatterplotContainer = d3.select('#scatterplot').node().getBoundingClientRect();
 		let chloropleth1Container = d3.select('#chloropleth1').node().getBoundingClientRect();
 		let chloropleth2Container = d3.select('#chloropleth2').node().getBoundingClientRect();
 
 		let defaultColumns = ['Deep_Pov_All', 'Vets18OPct'];
 
-		d3.select('#histogram-title').text(`Histogram: ${descriptions[defaultColumns[0]]} and ${descriptions[defaultColumns[1]]}`);
+		d3.select('#histogram1-title').text(`Histogram: ${descriptions[defaultColumns[0]]}`);
+		d3.select('#histogram2-title').text(`Histogram: ${descriptions[defaultColumns[1]]}`);
 		d3.select('#scatterplot-title').text(`Scatterplot: ${descriptions[defaultColumns[0]]} and ${descriptions[defaultColumns[1]]}`);
 		d3.select('#chloropleth1-title').text(`Choropleth Map 1: ${descriptions[defaultColumns[0]]}`);
 		d3.select('#chloropleth2-title').text(`Choropleth Map 2: ${descriptions[defaultColumns[1]]}`);
 
-		let histogram = new Histogram({
-			'parentElement': '#histogram',
-			'containerHeight': histogramContainer.height,
-			'containerWidth': histogramContainer.width
-		}, histogramData, defaultColumns, descriptions);
+		let histogram1 = new Histogram({
+			'parentElement': '#histogram1',
+			'containerHeight': histogram1Container.height,
+			'containerWidth': histogram1Container.width
+		}, histogram1Data, defaultColumns[0], descriptions);
+
+		let histogram2 = new Histogram({
+			'parentElement': '#histogram2',
+			'containerHeight': histogram2Container.height,
+			'containerWidth': histogram2Container.width
+		}, histogram2Data, defaultColumns[1], descriptions);
 
 		// Scatterplot
 		let scatterplot = new Scatterplot({
@@ -107,7 +117,8 @@ d3.csv('data/MyData.csv')
 			let selectedColumn1 = d3.select(this).property('value');
 			let selectedColumn2 = d3.select('#dataSelector2').property('value');
 
-			histogram.updateData(data, [selectedColumn1, selectedColumn2], descriptions);
+			histogram1.updateData(data, selectedColumn1, descriptions);
+			histogram2.updateData(data, selectedColumn2, descriptions);
 			scatterplot.updateData(data, selectedColumn1, selectedColumn2, descriptions);
 			chloropleth1.updateData(data, selectedColumn1, descriptions);
 			chloropleth2.updateData(data, selectedColumn2, descriptions);
@@ -115,7 +126,8 @@ d3.csv('data/MyData.csv')
 			d3.select('#dataSelector1-description').text(descriptions[selectedColumn1]);
 			d3.select('#dataSelector2-description').text(descriptions[selectedColumn2]);
 
-			d3.select('#histogram-title').text(`Histogram: ${descriptions[selectedColumn1]} and ${descriptions[selectedColumn2]}`);
+			d3.select('#histogram-title').text(`Histogram: ${descriptions[selectedColumn1]}`);
+			d3.select('#histogram2-title').text(`Histogram: ${descriptions[selectedColumn2]}`);
 			d3.select('#scatterplot-title').text(`Scatterplot: ${descriptions[selectedColumn1]} and ${descriptions[selectedColumn2]}`);
 			d3.select('#chloropleth1-title').text(`Choropleth Map 1: ${descriptions[selectedColumn1]}`);
 			d3.select('#chloropleth2-title').text(`Choropleth Map 2: ${descriptions[selectedColumn2]}`);
@@ -125,7 +137,8 @@ d3.csv('data/MyData.csv')
 			let selectedColumn1 = d3.select('#dataSelector1').property('value');
 			let selectedColumn2 = d3.select(this).property('value');
 
-			histogram.updateData(data, [selectedColumn1, selectedColumn2]);
+			histogram1.updateData(data, selectedColumn1, descriptions);
+			histogram2.updateData(data, selectedColumn2, descriptions);
 			scatterplot.updateData(data, selectedColumn1, selectedColumn2);
 			chloropleth1.updateData(data, selectedColumn1);
 			chloropleth2.updateData(data, selectedColumn2);
@@ -133,7 +146,8 @@ d3.csv('data/MyData.csv')
 			d3.select('#dataSelector1-description').text(descriptions[selectedColumn1]);
 			d3.select('#dataSelector2-description').text(descriptions[selectedColumn2]);
 
-			d3.select('#histogram-title').text(`Histogram: ${descriptions[selectedColumn1]} and ${descriptions[selectedColumn2]}`);
+			d3.select('#histogram1-title').text(`Histogram: ${descriptions[selectedColumn1]}`);
+			d3.select('#histogram2-title').text(`Histogram: ${descriptions[selectedColumn2]}`);
 			d3.select('#scatterplot-title').text(`Scatterplot: ${descriptions[selectedColumn1]} and ${descriptions[selectedColumn2]}`);
 			d3.select('#chloropleth1-title').text(`Choropleth Map 1: ${descriptions[selectedColumn1]}`);
 			d3.select('#chloropleth2-title').text(`Choropleth Map 2: ${descriptions[selectedColumn2]}`);
