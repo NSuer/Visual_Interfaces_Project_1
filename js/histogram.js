@@ -13,6 +13,10 @@ class Histogram {
         this.title = [];
         this.brushed = this.brushed.bind(this);
 
+        this.colors = d3.scaleOrdinal([d3.schemeCategory10[0], d3.schemeCategory10[2]]);
+        this.mouseoverColor = d3.schemeCategory10[1];
+        this.selectedColor = d3.schemeCategory10[3];
+
         this.initVis();
         this.addEventListener();
 
@@ -53,52 +57,16 @@ class Histogram {
             .attr('class', 'brush')
             .call(vis.brush);
 
-        vis.renderVis();
-    }
-
-    renderVis() {
-        let vis = this;
-
-        // Create bins for each selected column
-        let bins = vis.selectedColumn.map((col, i) => {
-            return d3.histogram()
-                .domain([0, 100])
-                .thresholds(d3.range(0, 100, 1))
-                (vis.data.map(d => d[col]))
-                .map(bin => {
-                    bin.x0 = bin.x0 !== undefined ? bin.x0 : bin[0];
-                    bin.x1 = bin.x1 !== undefined ? bin.x1 : bin[bin.length - 1];
-                    bin.column = col;
-                    bin.index = i;
-                    bin.fips = bin.map(d => vis.data.find(data => data[vis.selectedColumn[i]] === d).FIPS); // Add FIPS for all data points in each bin
-                    return bin;
-                });
-        });
-
-        // Create scales
-        let x = d3.scaleLinear()
-            .domain([0, 100])
-            .range([0, vis.width]);
-
-        let y = d3.scaleLinear()
-            .domain([0, d3.max(bins.flat(), d => d.length)])
-            .range([vis.height, 0]);
-
         // Create axes
-        let xAxis = d3.axisBottom(x).tickFormat(d => d + '%');
-        let yAxis = d3.axisLeft(y);
-
-        vis.chart.selectAll('.x-axis').remove();
-        vis.chart.selectAll('.y-axis').remove();
+        vis.xAxis = d3.axisBottom(vis.xScaleFocus).tickFormat(d => d + '%');
+        vis.yAxis = d3.axisLeft(d3.scaleLinear().range([vis.height, 0]));
 
         vis.chart.append('g')
             .attr('class', 'x-axis')
-            .attr('transform', `translate(0, ${vis.height})`)
-            .call(xAxis);
+            .attr('transform', `translate(0, ${vis.height})`);
 
         vis.chart.append('g')
-            .attr('class', 'y-axis')
-            .call(yAxis);
+            .attr('class', 'y-axis');
 
         vis.chart.append('text')
             .attr('transform', `translate(${vis.width / 2}, ${vis.height + vis.config.margin.bottom - 5})`)
@@ -109,11 +77,6 @@ class Histogram {
             .attr('transform', `translate(${-vis.config.margin.left + 15}, ${vis.height / 2}) rotate(270)`)
             .style('text-anchor', 'middle')
             .text('Count');
-
-        // Create bars for each column
-        let colors = d3.scaleOrdinal([d3.schemeCategory10[0], d3.schemeCategory10[2]]);
-        let mouseoverColor = d3.schemeCategory10[1];
-        let selectedColor = d3.schemeCategory10[3];
 
         // Add legend
         let legend = vis.svg.append('g')
@@ -156,7 +119,7 @@ class Histogram {
             .attr('y', 40)
             .attr('width', 10)
             .attr('height', 10)
-            .attr('fill', selectedColor);
+            .attr('fill', this.selectedColor);
 
         legend.append('text')
             .attr('x', 20)
@@ -164,6 +127,52 @@ class Histogram {
             .text('Selected Data Points')
             .style('font-size', '12px')
             .attr('alignment-baseline', 'middle');
+
+        // Add tooltip
+        vis.tooltip = d3.select('body').append('div')
+            .attr('class', 'tooltip')
+            .style('position', 'absolute')
+            .style('text-align', 'center')
+            .style('width', '120px')
+            .style('height', '50px')
+            .style('padding', '2px')
+            .style('font', '12px sans-serif')
+            .style('background', 'lightsteelblue')
+            .style('border', '0px')
+            .style('border-radius', '8px')
+            .style('pointer-events', 'none')
+            .style('opacity', 0);
+    }
+
+    renderVis() {
+        let vis = this;
+
+        // Create bins for each selected column
+        let bins = vis.selectedColumn.map((col, i) => {
+            return d3.histogram()
+                .domain([0, 100])
+                .thresholds(d3.range(0, 100, 1))
+                (vis.data.map(d => d[col]))
+                .map(bin => {
+                    bin.x0 = bin.x0 !== undefined ? bin.x0 : bin[0];
+                    bin.x1 = bin.x1 !== undefined ? bin.x1 : bin[bin.length - 1];
+                    bin.column = col;
+                    bin.index = i;
+                    bin.fips = bin.map(d => vis.data.find(data => data[vis.selectedColumn[i]] === d).FIPS); // Add FIPS for all data points in each bin
+                    return bin;
+                });
+        });
+
+        let x = d3.scaleLinear()
+            .domain([0, 100])
+            .range([0, vis.width]);
+
+        let y = d3.scaleLinear()
+            .domain([0, d3.max(bins.flat(), d => d.length)])
+            .range([vis.height, 0]);
+
+        vis.chart.select('.x-axis').call(vis.xAxis);
+        vis.chart.select('.y-axis').call(vis.yAxis.scale(y));
 
         bins.forEach((binData, i) => {
             let bars = vis.chart.selectAll(`.bar-${i}`)
@@ -177,30 +186,30 @@ class Histogram {
                 .attr('y', d => y(d.length))
                 .attr('width', d => (x(d.x1) - x(d.x0)) / 2 - 1)
                 .attr('height', d => vis.height - y(d.length))
-                .attr('fill', d => window.selectedCounties.some(f => d.fips.includes(f)) ? selectedColor : colors(i))
+                .attr('fill', this.colors(i))
                 .attr('opacity', 0.7)
-                .attr('stroke', 'black')
+                .attr('stroke', d => window.selectedCounties.some(f => d.fips.includes(f)) ? this.selectedColor : this.colors(i))
                 .on('mouseover', function (event, d) {
                     d3.select(this)
                         .attr('opacity', 1)
-                        .attr('stroke', mouseoverColor);
-                    tooltip.transition()
+                        .attr('stroke', vis.mouseoverColor);
+                    vis.tooltip.transition()
                         .duration(200)
                         .style('opacity', .9);
-                    tooltip.html(`Count: ${d.length}<br> Percentage range: [${d.x0}%, ${d.x1}%]`)
+                    vis.tooltip.html(`Count: ${d.length}<br> Percentage range: [${d.x0}%, ${d.x1}%]`)
                         .style('left', (event.pageX + 5) + 'px')
                         .style('top', (event.pageY - 35) + 'px')
                 })
                 .on('mouseout', function () {
                     d3.select(this)
                         .attr('opacity', 0.7)
-                        .attr('stroke', 'black');
-                    tooltip.transition()
+                        .attr('stroke', d => window.selectedCounties.some(f => d.fips.includes(f)) ? vis.selectedColor : vis.colors(d.index));
+                    vis.tooltip.transition()
                         .duration(500)
                         .style('opacity', 0);
                 })
                 .on('mousedown', function (event, d) {
-                    tooltip.transition()
+                    vis.tooltip.transition()
                         .duration(500)
                         .style('opacity', 0);
                     var e = vis.brush.extent(),
@@ -217,32 +226,16 @@ class Histogram {
                     d3.selectAll('.tooltip').style('opacity', 0);
                 })
                 .on('mouseup', function () {
-                    tooltip.transition()
+                    vis.tooltip.transition()
                         .duration(500)
                         .style('opacity', 0);
                 });
             bars.exit().remove();
         });
-
-        // Add tooltip
-        let tooltip = d3.select('body').append('div')
-            .attr('class', 'tooltip')
-            .style('position', 'absolute')
-            .style('text-align', 'center')
-            .style('width', '120px')
-            .style('height', '50px')
-            .style('padding', '2px')
-            .style('font', '12px sans-serif')
-            .style('background', 'lightsteelblue')
-            .style('border', '0px')
-            .style('border-radius', '8px')
-            .style('pointer-events', 'none')
-            .style('opacity', 0);
     }
 
     updateData = function (data, selectedColumn, descriptions) {
         this.selectedColumn = Array.isArray(selectedColumn) ? selectedColumn : [selectedColumn];
-        console.log(this.selectedColumn);
 
         this.processedData = data.map(d => ({
             Xdata: d[this.selectedColumn],
@@ -250,8 +243,6 @@ class Histogram {
             State: d['State'],
             County: d['County']
         }));
-        // clear then re-draw the histogram
-        console.log(this.processedData);
 
         this.renderVis();
     }

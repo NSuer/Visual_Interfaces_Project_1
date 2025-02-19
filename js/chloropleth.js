@@ -108,23 +108,6 @@ class Chloropleth {
             .attr('height', 10)
             .style('fill', d3.schemeCategory10[1]);
 
-        // Add text for the selected color
-        vis.legend.append('text')
-            .attr('x', -110)
-            .attr('y', vis.height / 2 + 20)
-            .attr('text-anchor', 'start')
-            .text('Selected Color');
-
-        // Add rectangle for the selected color
-        vis.legend.append('rect')
-            .attr('x', -130)
-            .attr('y', vis.height / 2 + 10)
-            .attr('width', 20)
-            .attr('height', 10)
-            .style('fill', d3.schemeCategory10[3]);
-
-
-
         // Create projection
         vis.projection = d3.geoAlbersUsa()
             .translate([vis.width / 2, vis.height / 2])
