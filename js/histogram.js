@@ -11,7 +11,9 @@ class Histogram {
         this.selectedColumns = [];
         this.defaultColumns = _defaultColumns;
         this.title = [];
+        this.brushed = this.brushed.bind(this);
 
+        this.initVis();
         this.addEventListener();
 
         // Call a class function
@@ -25,6 +27,14 @@ class Histogram {
         vis.width = vis.config.containerWidth - vis.config.margin.left - vis.config.margin.right;
         vis.height = vis.config.containerHeight - vis.config.margin.top - vis.config.margin.bottom;
 
+        vis.xScaleFocus = d3.scaleLinear()
+            .domain([0, 100])
+            .range([0, vis.width]);
+
+        vis.xScaleContext = d3.scaleLinear()
+            .domain([0, 100])
+            .range([0, vis.width]);
+
         // Add <svg> element (drawing space)
         vis.svg = d3.select(vis.config.parentElement)
             .attr('width', vis.config.containerWidth)
@@ -32,6 +42,22 @@ class Histogram {
 
         vis.chart = vis.svg.append('g')
             .attr('transform', `translate(${vis.config.margin.left}, ${vis.config.margin.top})`);
+
+        vis.brush = d3.brushX()
+            .extent([[0, 0], [vis.width, vis.height]])
+            .on('brush end', function (event) {
+                vis.brushed(event);
+            });
+
+        vis.chart.append('g')
+            .attr('class', 'brush')
+            .call(vis.brush);
+
+        vis.renderVis();
+    }
+
+    renderVis() {
+        let vis = this;
 
         // Create bins for each selected column
         let bins = vis.selectedColumns.map((col, i) => {
@@ -99,50 +125,20 @@ class Histogram {
             .enter()
             .append('rect')
             .attr('x', 0)
-            .attr('y', (d, i) => i * 20)
+            .attr('y', (_, i) => i * 20)
             .attr('width', 10)
             .attr('height', 10)
-            .attr('fill', (d, i) => colors(i));
+            .attr('fill', (_, i) => colors(i));
 
         legend.selectAll('text')
             .data(vis.selectedColumns)
             .enter()
             .append('text')
             .attr('x', 20)
-            .attr('y', (d, i) => i * 20 + 10)
+            .attr('y', (_, i) => i * 20 + 10)
             .text(d => d)
             .style('font-size', '12px')
             .style('font-weight', 'bold');
-
-        // Add viewing data points and selected data points to the legend
-        legend.append('rect')
-            .attr('x', 0)
-            .attr('y', vis.selectedColumns.length * 20)
-            .attr('width', 10)
-            .attr('height', 10)
-            .attr('fill', mouseoverColor);
-
-        legend.append('text')
-            .attr('x', 20)
-            .attr('y', vis.selectedColumns.length * 20 + 10)
-            .text('Viewing')
-            .style('font-size', '12px')
-            .style('font-weight', 'bold');
-
-        legend.append('rect')
-            .attr('x', 0)
-            .attr('y', vis.selectedColumns.length * 20 + 20)
-            .attr('width', 10)
-            .attr('height', 10)
-            .attr('fill', selectedColor);
-
-        legend.append('text')
-            .attr('x', 20)
-            .attr('y', vis.selectedColumns.length * 20 + 30)
-            .text('Selected')
-            .style('font-size', '12px')
-            .style('font-weight', 'bold');
-
 
         bins.forEach((binData, i) => {
             let bars = vis.chart.selectAll(`.bar-${i}`)
@@ -170,7 +166,7 @@ class Histogram {
                         .style('left', (event.pageX + 5) + 'px')
                         .style('top', (event.pageY - 35) + 'px')
                 })
-                .on('mouseout', function (event, d) {
+                .on('mouseout', function () {
                     d3.select(this)
                         .attr('opacity', 0.7)
                         .attr('stroke', 'black');
@@ -178,27 +174,28 @@ class Histogram {
                         .duration(500)
                         .style('opacity', 0);
                 })
-                .on('click', function (event, d) {
-                    const fips = d3.select(this).data()[0].fips;
-                    //sort the fips
-                    fips.sort();
-                    console.log(fips);
+                .on('mousedown', function (event, d) {
+                    tooltip.transition()
+                        .duration(500)
+                        .style('opacity', 0);
+                    var e = vis.brush.extent(),
+                        m = d3.pointer(vis.svg.node()), // pointer position with respect to g
+                        p = [x.invert(m[0]), y.invert(m[1])]; // position in user space
 
-                    fips.forEach(f => {
-                        const index = window.selectedCounties.indexOf(f);
-                        if (index === -1) {
-                            window.selectedCounties.push(f);
-                        } else {
-                            window.selectedCounties.splice(index, 1);
-                        }
-                    })
-                    console.log(window.selectedCounties);
-                    window.dispatchEvent(new Event('selectedCountiesChanged'));
+                    // if there is no brush
+                    if (e[0] > p[0] || p[0] > e[1]) {
+                        vis.brush.extent([p, p]); // set brush to current position
+                    } else {
+                        d3.select(this).classed('extent', true); // else we are moving the brush, so fool d3 (I got this from looking at source code, it's how d3 determines a drag)
+                    }
+                    // clear all tooltips
+                    d3.selectAll('.tooltip').style('opacity', 0);
+                })
+                .on('mouseup', function () {
                     tooltip.transition()
                         .duration(500)
                         .style('opacity', 0);
                 });
-
             bars.exit().remove();
         });
 
@@ -229,15 +226,62 @@ class Histogram {
             County: d['County']
         }));
         // clear then re-draw the histogram
-        d3.select(this.config.parentElement).selectAll('*').remove();
 
-        this.initVis();
+        this.renderVis();
     }
 
     // Method to add event listener
     addEventListener() {
-        window.addEventListener('selectedCountiesChanged', (event) => {
-            this.updateData(this.data, this.selectedColumns);
+        window.addEventListener('selectedCountiesChanged', () => {
+            if (this.hasSelectedCountiesChanged()) {
+                this.updateData(this.data, this.selectedColumns);
+            }
         });
     }
+
+    hasSelectedCountiesChanged() {
+        // Check if selected counties have actually changed
+        // This can be a more sophisticated comparison, but here’s a simple example
+        const currentCounties = window.selectedCounties.join(',');
+        if (this.previousCounties !== currentCounties) {
+            this.previousCounties = currentCounties;
+            return true;
+        }
+        return false;
+    }
+
+    brushed(event) {
+        let vis = this;
+        const selection = event.selection;
+
+        // Check if the brush is still active or if it has been removed
+        if (selection) {
+            // clear the selected counties
+            window.selectedCounties = [];
+            // Get the corresponding date range
+            const dateRange = selection.map(vis.xScaleContext.invert);
+
+            // get the fips of the selected data points
+            const selectedData = vis.processedData.filter(d => d.Xdata >= dateRange[0] && d.Xdata <= dateRange[1]);
+
+            // Update the bars in the focus chart
+            const fips = selectedData.map(d => d.Fips);
+            //sort the fips
+            fips.sort();
+
+            fips.forEach(f => {
+                const index = window.selectedCounties.indexOf(f);
+                if (index === -1) {
+                    window.selectedCounties.push(f);
+                } else {
+                    window.selectedCounties.splice(index, 1);
+                }
+            });
+
+            // Dispatch a custom event to notify other charts
+            window.dispatchEvent(new CustomEvent('selectedCountiesChanged'));
+
+        }
+    }
 }
+

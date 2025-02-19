@@ -51,7 +51,7 @@ class Chloropleth {
         // the legend should be a gradient from 0 to 1 with the color as well as showing the viewing and selected color
 
         // Create a color scale
-        vis.color = d3.scaleSequential(d3.interpolateTurbo)
+        vis.color = d3.scaleSequential(d3.interpolateBlues)
             .domain([0, 1]);
 
         // Create a legend
