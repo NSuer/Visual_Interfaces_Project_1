@@ -162,7 +162,7 @@ class Chloropleth {
             d3.select(this)
                 .transition()
                 .duration(100)
-                .style('fill', d3.schemeCategory10[1]);
+                .style('stroke', d3.schemeCategory10[1]);
 
             vis.infoText.text(`FIPS: ${d.properties.GEOID} | State: ${d.properties.state} | County: ${d.properties.county} | Percentage: ${d.properties.data}%`);
             })
@@ -170,7 +170,7 @@ class Chloropleth {
             d3.select(this)
                 .transition()
                 .duration(100)
-                .style('fill', function (d) {
+                .style('stroke', function (d) {
                 let value = d.properties.value;
                 if (window.selectedCounties && window.selectedCounties.length > 0) {
                     return window.selectedCounties.includes(d.properties.GEOID) ? (value ? vis.color(value) : '#ccc') : '#e0e0e0'; // Grey out unselected counties
