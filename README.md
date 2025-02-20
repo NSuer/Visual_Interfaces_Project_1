@@ -62,7 +62,7 @@ Image of components:
 
 Image of tooltip:
 
-![image](mapsTooltip.png)
+![image](mapsTootlip.png)
 
 ## What the application allows you to discover
 The application allows you to discover the relationship between the economy and military service of US counties. You can see how the economy of a county impacts the military service of that county. One observation I made was that it seems like there might be a correlation between veterans on disability and poverty of veterans. Here is an image of the scatterplot that shows this relationship:
