@@ -70,22 +70,37 @@ The application allows you to discover the relationship between the economy and 
 ![image](Observation.png)
 
 ## Process
-<!-- 1 section on your process- what libraries did you use?  How did you structure your code?  How can you access it and run it?  Link to your code (and the live application, if it is deployed online).  -->
 
 ### Libraries
 I only used D3 on the project
 
 ### Code Structure
-My code is structured in a fairly normal wy, with each graph being it's own file. The only things of note are my use of a variable called "window.selectedCounties" which is a variable that is stored in the window so that all of the graphs can access it. This variable is an array of the counties that are selected by the brush. I have an event listener that is triggered whenever I change the selected counties. This event listener then updates the other graphs to show the selected counties. 
+My code is structured in a fairly normal way, with each graph being it's own file. The only things of note are my use of a variable called "window.selectedCounties" which is a variable that is stored in the window so that all of the graphs can access it. This variable is an array of the counties that are selected by the brush. I have an event listener that is triggered whenever I change the selected counties. This event listener then updates the other graphs to show the selected counties. 
 
+### How to access and run
+To access and run the code, you can go to the github repository and download the code. You can then run the code by opening the index.html file in a web browser. You can also access the code by going to the hosted project link.
 
+### Code Link
 
-## Challenges and Future Work
+https://github.com/NSuer/Visual_Interfaces_Project_1
+
+### Live Application Link
+
+https://nsuer.github.io/Visual_Interfaces_Project_1/
+
+## Future Work
+Here are some things I would like to do in the future:
+- Get the chloropleth maps to have a brush capability. I ran out of time to do this. I couldn't figure out a way to do this that was not overly complex.
+- Better design. I am not a designer and I think the design of the project could be improved. 
+- Reduce lag. The project is a bit laggy when you use the brush. I would like to reduce this lag in the future.
+
+## Challenges
+The main challenge I faced was figuring out how to use the brush. I had to look up how to use the brush and how to update the other graphs when the brush was used. I also faced an issue with the brush and mouseover not working togeather, I used google to figure this out. I will approach future prjects differently by implemeting the most complex thing first, then building the rest of the project around that. This will help me avoid the issue I had with the brush and mouseover not working togeather.
 
 ## AI and Collaboration
 - I use github copilot when I program. This is used more as an autocomplete tool than anything.
 - I used google to learn how to do the cloropleth map. I lost the link though. The code is mostly my own though.
-
+- I used google to figure out an issue with mouseover and the brush. I lost the link though. The code is mostly my own though.
 
 ## Demo
 
