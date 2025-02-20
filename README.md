@@ -27,33 +27,41 @@ The main views of my data are 2 bar charts, a scatterplot, and 2 chloropleth map
 The bar charts show the main data points of the project. The x-axis is the data point , it is labeled percenatge because all of my data are percenatges of the population. The y-axis is the number of counties that have that value for the data point. You can interact with the bar charts by hovering over the bars. When you hover over the bars, a tooltip will appear that shows the range of values for that bar and the number of counties that have that value. You can also interact with the bar charts with a brush, to use the brush you click and drag on the bar chart. When you use the brush, the scatterplot and chloropleth maps will highlight the counties that are within the range of the brush.
 
 Image of components:
+
 ![image](Histogram.png)
 
 Image of tooltip:
+
 ![image](HistogramTooltip.png)
 
 Image of brush:
+
 ![image](HistogramBrush.png)
 
 ### Scatterplot
 The scatterplot shows the relationship between two data points. The x-axis is the first data point and the y-axis is the second data point. You can interact with the scatterplot by hovering over the points. When you hover over the points, a tooltip will appear that shows the values of the data points for that county. You can also interact with the scatterplot with a brush, to use the brush you click and drag on the scatterplot. When you use the brush, the bar charts and chloropleth maps will highlight the counties that are within the range of the brush.
 
 Image of components:
+
 ![image](Scatterplot.png)
 
 Image of tooltip:
+
 ![image](ScatterplotTooltip.png)
 
 Image of brush:
+
 ![image](ScatterplotBrush.png)
 
 ### Chloropleth Maps
 The chloropleth maps show the data points on a map of the US. The first map shows the data points for the first data point and the second map shows the data points for the second data point. You can interact with the chloropleth maps by hovering over the counties. When you hover over the counties, a tooltip will appear that shows the values of the data points for that county. 
 
 Image of components:
+
 ![image](Maps.png)
 
 Image of tooltip:
+
 ![image](mapsTooltip.png)
 
 ## What the application allows you to discover
