@@ -102,8 +102,8 @@ The main challenge I faced was figuring out how to use the brush. I had to look 
 - I used google to learn how to do the cloropleth map. I lost the link though. The code is mostly my own though.
 - I used google to figure out an issue with mouseover and the brush. I lost the link though. The code is mostly my own though.
 
-## Demo
+## Demo Video
 
-![Demo](Demo.mp4)
+https://www.youtube.com/watch?v=0jQvQnp2S5s
 
 
